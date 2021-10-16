@@ -1,10 +1,16 @@
 #include "gamewindow.h"
 
+#include <iostream>
+#include <gameengine.h>
+
 GameWindow::GameWindow(QWidget *parent) : QWidget(parent)
 {
+
 	setAutoFillBackground(true);
 	pen.setColor(Qt::red);
 	brush.setColor(Qt::red);
+	gameEngine.resetGame();
+
 	update();
 }
 
@@ -29,50 +35,58 @@ void GameWindow::resizeEvent(QResizeEvent* event)
 	if(width() > height())
 	{
 		if (lastSize.height()!=height()) {
-			this->resize(height(), height()); // it is possible that this call should be scheduled to next iteration of event loop
+			this->resize(height(), height());
 		}
 	}
 	else if(width() < height())
 	{
 		if (lastSize.width()!=width()) {
-			this->resize(width(), width()); // it is possible that this call should be scheduled to next iteration of event loop
+			this->resize(width(), width());
 		}
 	}
-
-
 }
 
 void GameWindow::paintEvent(QPaintEvent *event)
 {
+	Q_UNUSED(event);
 	QPainter p(this);
-	//QRect rectangle(10, 20, 80, 60);
-	//p.fillRect(rectangle, QBrush(Qt::red));
 	QPixmap pixmap(":/img/board.png");
 	pixmap = pixmap.scaled(this->size(), Qt::KeepAspectRatioByExpanding);
 	QPalette palette;
 	palette.setBrush(QPalette::Window, pixmap);
 	this->setPalette(palette);
-
 	drawCheckers(this->height());
 }
 
 void GameWindow::drawCheckers(int n)
 {
 	int step = n/8;
-	for(uint8_t	i = 0; i < 8; i++)
+	int offset = step/8;
+	int scale = step*3/4;
+	static bool printed = false;
+	for(boardpos_t k = 0; k < SQUARE_COUNT; k++)
 	{
-		for(uint8_t	j = 0; j < 8; j++)
+		SquareState state = gameEngine.getSquareState(k);
+		if(SQUARE_ISNOTEMPTY(state))
 		{
-			drawChecker(step*i, step*j, step, step);
+			int y = k/4;
+			drawChecker(step*((k*2 + 1)%8 - (y%2)) + offset, step*(y) + offset, scale, scale, state);
+			if(!printed) std::cout << (k*2 + 1)%9 << ", " << k/4 << std::endl;
 		}
 	}
+	printed = true;
 }
 
-void GameWindow::drawChecker(int x, int y, int w, int h)
+void GameWindow::drawChecker(int x, int y, int w, int h, SquareState state)
 {
 	QPainter p(this);
-	p.setBrush(Qt::red);
+	if(SQUARE_ISBLACK(state)) p.setBrush(Qt::black);
+	else p.setBrush(Qt::red);
 	p.drawEllipse(x, y, w, h);
-
+	if(SQUARE_ISKING(state))
+	{
+		p.setBrush(Qt::white);
+		p.drawText(x, y, w, h, Qt::AlignCenter, "K");
+	}
 }
 

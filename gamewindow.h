@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QPainter>
+#include "gameengine.h"
 
 class GameWindow : public QWidget
 {
@@ -12,6 +13,9 @@ public:
 	explicit GameWindow(QWidget *parent = nullptr);
 	~GameWindow();
 
+public slots:
+	void boardUpdated(BoardState b);
+
 protected:
 	void paintEvent(QPaintEvent* event) override;
 	QSize sizeHint() const override;
@@ -19,7 +23,10 @@ protected:
 
 private:
 	void drawCheckers(int n);
-	void drawChecker(int x, int y, int w, int h);
+	void drawChecker(int x, int y, int w, int h, SquareState state);
+	void clearSquare(boardpos_t position);
+
+	GameEngine gameEngine;
 
 	mutable QSize lastSize;
 	QPen pen;
