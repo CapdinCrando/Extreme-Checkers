@@ -88,7 +88,6 @@ void GameView::drawCheckers()
 
 void GameView::drawChecker(int x, int y, int w, int h, SquareState state)
 {
-	QPainter p(this);
 	QGraphicsEllipseItem* checker;
 	if(SQUARE_ISBLACK(state)) checker = scene->addEllipse(x, y, w, h, redPen, blackBrush);
 	else checker = scene->addEllipse(x, y, w, h, blackPen, redBrush);
