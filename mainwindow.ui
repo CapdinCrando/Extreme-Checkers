@@ -16,14 +16,7 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QHBoxLayout" name="horizontalLayout">
     <item>
-     <widget class="GameWindow" name="widget" native="true">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-     </widget>
+     <widget class="GameView" name="graphicsView"/>
     </item>
    </layout>
   </widget>
@@ -41,10 +34,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>GameWindow</class>
-   <extends>QWidget</extends>
-   <header>gamewindow.h</header>
-   <container>1</container>
+   <class>GameView</class>
+   <extends>QGraphicsView</extends>
+   <header>gameview.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

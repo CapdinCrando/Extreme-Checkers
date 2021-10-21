@@ -14,7 +14,7 @@ public:
 	~GameWindow();
 
 public slots:
-	void boardUpdated(BoardState b);
+	//void boardUpdated(BoardState b);
 
 protected:
 	void paintEvent(QPaintEvent* event) override;
