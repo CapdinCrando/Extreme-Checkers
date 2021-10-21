@@ -6,6 +6,8 @@
 #include <QLabel>
 #include "gameengine.h"
 
+#define BOARD_VIEW_SIZE 512
+
 class GameView : public QGraphicsView
 {
 	Q_OBJECT
@@ -13,8 +15,8 @@ public:
 	explicit GameView(QWidget *parent = nullptr);
 	~GameView();
 
-public slots:
-	//void boardUpdated(BoardState b);
+//public slots:
+	//void boardUpdated();
 
 protected:
 	QSize sizeHint() const override;

@@ -5,10 +5,12 @@
 
 GameView::GameView(QWidget *parent) : QGraphicsView(parent)
 {
+	this->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+	this->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+
 	scene = new QGraphicsScene();
 	this->setScene(scene);
-	//this->setAlignment(Qt::AlignTop|Qt::AlignLeft);
-	this->show();
+	this->scene->setSceneRect(0, 0, BOARD_VIEW_SIZE, BOARD_VIEW_SIZE);
 
 	redPen = QPen(Qt::red);
 	blackPen = QPen(Qt::black);
@@ -20,8 +22,9 @@ GameView::GameView(QWidget *parent) : QGraphicsView(parent)
 
 	gameEngine.resetGame();
 
-	//drawCheckers();
-	drawChecker(100,100,100,100, SQUARE_BLACK_KING);
+	drawCheckers();
+
+	this->show();
 }
 
 GameView::~GameView()
@@ -40,6 +43,7 @@ QSize GameView::sizeHint() const
 
 void GameView::resizeEvent(QResizeEvent* event)
 {
+	QGraphicsView::resizeEvent(event);
 	int h = height();
 	int w = width();
 	if(w > h)
@@ -54,8 +58,9 @@ void GameView::resizeEvent(QResizeEvent* event)
 			this->resize(w, w);
 		}
 	}
-	this->fitInView(0,0,500,500, Qt::KeepAspectRatio);
-	QGraphicsView::resizeEvent(event);
+	QTransform Matrix(1, 0, 0, 0, 1, 0, 0, 0, 1);
+	Matrix.scale(width() / sceneRect().width(), height() / sceneRect().height());
+	setTransform(Matrix);
 }
 
 void GameView::drawBackground(QPainter *painter, const QRectF &rect)
@@ -67,8 +72,7 @@ void GameView::drawBackground(QPainter *painter, const QRectF &rect)
 
 void GameView::drawCheckers()
 {
-	int n = height()*19;
-	int step = n/8;
+	int step = BOARD_VIEW_SIZE/8;
 	int offset = step/8;
 	int scale = step*3/4;
 	static bool printed = false;
@@ -79,7 +83,7 @@ void GameView::drawCheckers()
 		{
 			int y = k/4;
 			drawChecker(step*((k*2 + 1)%8 - (y%2)) + offset, step*(y) + offset, scale, scale, state);
-			if(!printed) std::cout << (k*2 + 1)%9 << ", " << k/4 << std::endl;
+			//if(!printed) std::cout << (k*2 + 1)%9 << ", " << k/4 << std::endl;
 		}
 	}
 	printed = true;

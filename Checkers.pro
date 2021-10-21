@@ -12,7 +12,6 @@ SOURCES += \
     gameboard.cpp \
     gameengine.cpp \
     gameview.cpp \
-    gamewindow.cpp \
     main.cpp \
     mainwindow.cpp
 
@@ -21,7 +20,6 @@ HEADERS += \
     gameboard.h \
     gameengine.h \
     gameview.h \
-    gamewindow.h \
     mainwindow.h
 
 FORMS += \
