@@ -7,6 +7,9 @@
 #include "gameengine.h"
 
 #define BOARD_VIEW_SIZE 512
+#define BOARD_VIEW_STEP (BOARD_VIEW_SIZE / 8)
+#define BOARD_VIEW_OFFSET (BOARD_VIEW_STEP / 8)
+#define BOARD_VIEW_SCALE (BOARD_VIEW_STEP * 3/4)
 
 class GameView : public QGraphicsView
 {
@@ -15,9 +18,6 @@ public:
 	explicit GameView(QWidget *parent = nullptr);
 	~GameView();
 
-//public slots:
-	//void boardUpdated();
-
 protected:
 	QSize sizeHint() const override;
 	void resizeEvent(QResizeEvent*) override;
@@ -25,8 +25,9 @@ protected:
 
 private:
 	void drawCheckers();
-	void drawChecker(int x, int y, int w, int h, SquareState state);
-	void clearSquare(boardpos_t position);
+	void updateBoardSquare(boardpos_t position, SquareState state);
+
+	QGraphicsEllipseItem* checkers[32] = {};
 
 	QGraphicsScene* scene;
 
