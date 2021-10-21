@@ -18,6 +18,9 @@ public:
 	explicit GameView(QWidget *parent = nullptr);
 	~GameView();
 
+signals:
+	void selectChecker(boardpos_t position);
+
 protected:
 	QSize sizeHint() const override;
 	void resizeEvent(QResizeEvent*) override;
