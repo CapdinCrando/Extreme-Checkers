@@ -20,7 +20,7 @@ enum SquareState : uint8_t {
 	SQUARE_BLACK_KING = 7
 };
 
-typedef uint8_t boardpos_t;
+typedef int8_t boardpos_t;
 
 typedef std::bitset<SQUARE_COUNT*BITS_PER_SQUARE> BoardState;
 
