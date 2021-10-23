@@ -4,19 +4,28 @@
 #define BOARD_VIEW_STEP (BOARD_VIEW_SIZE / 8)
 #define BOARD_VIEW_OFFSET (BOARD_VIEW_STEP / 8)
 #define BOARD_VIEW_SCALE (BOARD_VIEW_STEP * 3/4)
+#define BOARD_VIEW_X(position) BOARD_VIEW_STEP*((position*2 + 1)%8 - ((position/4)%2)) + BOARD_VIEW_OFFSET
+#define BOARD_VIEW_Y(position) BOARD_VIEW_STEP*( position/4) + BOARD_VIEW_OFFSET
 
-const QPen CheckerItem::redPen = QPen(Qt::red);
-const QPen CheckerItem::blackPen = QPen(Qt::black);
-const QBrush CheckerItem::redBrush = QBrush(Qt::red);
-const QBrush CheckerItem::blackBrush = QBrush(Qt::black);
-
-CheckerItem::CheckerItem(boardpos_t position) : QGraphicsEllipseItem()
+CheckerItem::CheckerItem(boardpos_t position, SquareState checkerType)
+	: QGraphicsEllipseItem(BOARD_VIEW_X(position), BOARD_VIEW_Y(position), BOARD_VIEW_SCALE, BOARD_VIEW_SCALE)
 {
-	int y_scale = position/4;
-	int x = BOARD_VIEW_STEP*((position*2 + 1)%8 - (y_scale%2)) + BOARD_VIEW_OFFSET;
-	int y = BOARD_VIEW_STEP*(y_scale) + BOARD_VIEW_OFFSET;
+	this->position = position;
+	this->checkerType = checkerType;
+	if(SQUARE_ISBLACK(checkerType))
+	{
+		this->setPen(blackPen);
+		this->setBrush(blackBrush);
+	}
+	else
+	{
+		this->setPen(redPen);
+		this->setBrush(redBrush);
+	}
+}
 
-	//QGraphicsEllipseItem::QGraphicsEllipseItem(x, y, BOARD_VIEW_SCALE, BOARD_VIEW_SCALE);
-	//else checker = scene->addEllipse(x, y, BOARD_VIEW_SCALE, BOARD_VIEW_SCALE, blackPen, redBrush);
-
+void CheckerItem::mousePressEvent(QGraphicsSceneMouseEvent* event)
+{
+	Q_UNUSED(event);
+	checkerSelected(this->position);
 }

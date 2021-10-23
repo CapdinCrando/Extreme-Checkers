@@ -70,6 +70,11 @@ void GameView::drawBackground(QPainter *painter, const QRectF &rect)
 	painter->drawPixmap(rect, pixmap, QRectF(pixmap.rect()));
 }
 
+void mousePressEvent(QMouseEvent *event)
+{
+
+}
+
 void GameView::updateBoardSquare(boardpos_t position, SquareState state)
 {
 	if(SQUARE_ISEMPTY(state))
