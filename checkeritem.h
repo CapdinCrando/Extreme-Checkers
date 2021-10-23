@@ -13,6 +13,7 @@ const QPen redPen = QPen(Qt::red);
 const QBrush redBrush = QBrush(Qt::red);
 const QPen blackPen = QPen(Qt::black);
 const QBrush blackBrush = QBrush(Qt::black);
+const QBrush whiteBrush = QBrush(Qt::white);
 
 class CheckerItem : public QGraphicsEllipseItem
 {
