@@ -41,5 +41,5 @@ CheckerItem::CheckerItem(boardpos_t position, SquareState checkerType)
 void CheckerItem::mousePressEvent(QGraphicsSceneMouseEvent* event)
 {
 	Q_UNUSED(event);
-	checkerSelected(this->position);
+	checkerSelected(this->position, this->checkerType);
 }

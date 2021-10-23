@@ -10,6 +10,7 @@ CONFIG += c++11
 
 SOURCES += \
     checkeritem.cpp \
+    fakecheckeritem.cpp \
     gameboard.cpp \
     gameengine.cpp \
     gameview.cpp \
@@ -19,6 +20,7 @@ SOURCES += \
 HEADERS += \
     checkeritem.h \
     defines.h \
+    fakecheckeritem.h \
     gameboard.h \
     gameengine.h \
     gameview.h \

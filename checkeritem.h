@@ -15,14 +15,14 @@ const QPen blackPen = QPen(Qt::black);
 const QBrush blackBrush = QBrush(Qt::black);
 const QBrush whiteBrush = QBrush(Qt::white);
 
-class CheckerItem : public QGraphicsEllipseItem
+class CheckerItem : public QObject, public QGraphicsEllipseItem
 {
 	Q_OBJECT
 public:
 	CheckerItem(boardpos_t position, SquareState checkerType);
 
 signals:
-	void checkerSelected(boardpos_t pos);
+	void checkerSelected(boardpos_t pos, SquareState checkerType);
 
 protected:
 	void mousePressEvent(QGraphicsSceneMouseEvent* event) override;

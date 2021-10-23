@@ -70,16 +70,39 @@ void GameView::drawBackground(QPainter *painter, const QRectF &rect)
 	painter->drawPixmap(rect, pixmap, QRectF(pixmap.rect()));
 }
 
-void mousePressEvent(QMouseEvent *event)
+void GameView::mousePressEvent(QMouseEvent *event)
 {
+	QGraphicsView::mousePressEvent(event);
+}
 
+void GameView::drawFakeCheckers(boardpos_t pos, SquareState checkerType)
+{
+	// Clear old items
+	for(uint8_t i = 0; i < fakeItems.size(); i++)
+	{
+		scene->removeItem(fakeItems[i]);
+	}
+	fakeItems.clear();
+
+	// Get moves
+	std::vector<boardpos_t> moves = gameEngine.getPossibleMoves(pos);
+
+	// Add new items
+	for(uint8_t i = 0; i < moves.size(); i++)
+	{
+		FakeCheckerItem* fakeChecker = new FakeCheckerItem(moves[i], checkerType);
+		scene->addItem(fakeChecker);
+		// TODO: FIX BUG
+		// TODO: CONNECT fakeCheckerPress
+		fakeItems.push_back(fakeChecker);
+	}
 }
 
 void GameView::updateBoardSquare(boardpos_t position, SquareState state)
 {
+	CheckerItem* checker = checkers[position];
 	if(SQUARE_ISEMPTY(state))
 	{
-		QGraphicsEllipseItem* checker = checkers[position];
 		if(checker != nullptr)
 		{
 			scene->removeItem(checker);
@@ -90,19 +113,12 @@ void GameView::updateBoardSquare(boardpos_t position, SquareState state)
 	{
 		if(checkers[position] == nullptr)
 		{
-			int y_scale = position/4;
-			int x = BOARD_VIEW_STEP*((position*2 + 1)%8 - (y_scale%2)) + BOARD_VIEW_OFFSET;
-			int y = BOARD_VIEW_STEP*(y_scale) + BOARD_VIEW_OFFSET;
-
-			QGraphicsEllipseItem* checker;
-			if(SQUARE_ISBLACK(state)) checker = scene->addEllipse(x, y, BOARD_VIEW_SCALE, BOARD_VIEW_SCALE, redPen, blackBrush);
-			else checker = scene->addEllipse(x, y, BOARD_VIEW_SCALE, BOARD_VIEW_SCALE, blackPen, redBrush);
-			if(SQUARE_ISKING(state))
+			checker = new CheckerItem(position, state);
+			if(!(SQUARE_ISBLACK(state)))
 			{
-				QGraphicsProxyWidget *proxyWidget = new QGraphicsProxyWidget(checker);
-				proxyWidget->setWidget(kingLabel);
-				proxyWidget->setPos(checker->boundingRect().center()-kingLabel->rect().center());
+				connect(checker, &CheckerItem::checkerSelected, this, &GameView::drawFakeCheckers);
 			}
+			scene->addItem(checker);
 			checkers[position] = checker;
 		}
 	}
