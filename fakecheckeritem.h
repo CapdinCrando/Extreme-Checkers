@@ -8,7 +8,16 @@ class FakeCheckerItem : public CheckerItem
 {
 	Q_OBJECT
 public:
-	FakeCheckerItem(boardpos_t position, SquareState checkerType);
+	FakeCheckerItem(Move move, SquareState checkerType);
+
+signals:
+	void fakeCheckerSelected(Move move);
+
+protected:
+	void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
+
+private:
+	Move move;
 };
 
 #endif // FAKECHECKERITEM_H

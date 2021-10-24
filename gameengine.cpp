@@ -18,9 +18,9 @@ void GameEngine::resetGame()
 	}
 }
 
-void GameEngine::move(boardpos_t pos1, boardpos_t pos2)
+void GameEngine::move(Move move)
 {
-	gameBoard.move(pos1, pos2);
+	gameBoard.move(move.oldPos, move.newPos);
 }
 
 
@@ -30,9 +30,11 @@ SquareState GameEngine::getSquareState(boardpos_t index)
 }
 
 // TODO: Add jumps & multijumps
-std::vector<boardpos_t> GameEngine::getPossibleMoves(boardpos_t pos)
+std::vector<Move> GameEngine::getPossibleMoves(boardpos_t pos)
 {
-	std::vector<boardpos_t> testMoves;
+	std::vector<Move> testMoves;
+	Move m;
+	m.oldPos = pos;
 	for(uint8_t i = 0; i < 4; i++)
 	{
 		// Get move
@@ -45,7 +47,9 @@ std::vector<boardpos_t> GameEngine::getPossibleMoves(boardpos_t pos)
 			if(gameBoard.getSquareState(move) == SQUARE_EMPTY)
 			{
 				// Add move to potential moves
-				testMoves.push_back(move);
+				m.newPos = move;
+				m.moveType = MOVE_JUMP;
+				testMoves.push_back(m);
 			}
 		}
 	}

@@ -1,6 +1,15 @@
 #include "fakecheckeritem.h"
 
-FakeCheckerItem::FakeCheckerItem(boardpos_t position, SquareState checkerType) : CheckerItem(position, checkerType)
+#include <iostream>
+
+FakeCheckerItem::FakeCheckerItem(Move move, SquareState checkerType) : CheckerItem(move.newPos, checkerType)
 {
 	this->setBrush(fakeRedBrush);
+	this->move = move;
+}
+
+void FakeCheckerItem::mousePressEvent(QGraphicsSceneMouseEvent* event)
+{
+	Q_UNUSED(event);
+	emit fakeCheckerSelected(this->move);
 }

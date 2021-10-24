@@ -22,6 +22,7 @@ public:
 
 public slots:
 	void drawFakeCheckers(boardpos_t pos, SquareState state);
+	void displayMove(Move move);
 
 protected:
 	QSize sizeHint() const override;
@@ -30,7 +31,7 @@ protected:
 	void mousePressEvent(QMouseEvent *event) override;
 
 private:
-	void drawCheckers();
+	void resetBoard();
 	void clearFakeCheckers();
 	void updateBoardSquare(boardpos_t position, SquareState checkerType);
 
@@ -48,6 +49,8 @@ private:
 	QBrush blackBrush;
 
 	QLabel* kingLabel;
+
+	bool acceptingClicks = false;
 };
 
 #endif // GAMEVIEW_H

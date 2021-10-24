@@ -9,6 +9,7 @@ GameView::GameView(QWidget *parent) : QGraphicsView(parent)
 	this->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 	this->setAutoFillBackground(true);
 	this->setCacheMode(QGraphicsView::CacheBackground);
+	this->setAlignment(Qt::AlignLeft | Qt::AlignTop);
 
 	scene = new QGraphicsScene();
 	this->setScene(scene);
@@ -24,9 +25,10 @@ GameView::GameView(QWidget *parent) : QGraphicsView(parent)
 
 	gameEngine.resetGame();
 
-	drawCheckers();
+	resetBoard();
 
 	this->show();
+	acceptingClicks = true;
 }
 
 GameView::~GameView()
@@ -74,7 +76,8 @@ void GameView::drawBackground(QPainter *painter, const QRectF &rect)
 
 void GameView::mousePressEvent(QMouseEvent *event)
 {
-	QGraphicsView::mousePressEvent(event);
+	if(acceptingClicks) QGraphicsView::mousePressEvent(event);
+	else event->ignore();
 }
 
 void GameView::clearFakeCheckers()
@@ -92,16 +95,27 @@ void GameView::drawFakeCheckers(boardpos_t pos, SquareState checkerType)
 	this->clearFakeCheckers();
 
 	// Get moves
-	std::vector<boardpos_t> moves = gameEngine.getPossibleMoves(pos);
+	std::vector<Move> moves = gameEngine.getPossibleMoves(pos);
 
 	// Add new items
 	for(uint8_t i = 0; i < moves.size(); i++)
 	{
 		FakeCheckerItem* fakeChecker = new FakeCheckerItem(moves[i], checkerType);
 		scene->addItem(fakeChecker);
-		// TODO: CONNECT fakeCheckerPress
+		connect(fakeChecker, &FakeCheckerItem::fakeCheckerSelected, this, &GameView::displayMove, Qt::QueuedConnection);
 		fakeItems.push_back(fakeChecker);
 	}
+}
+
+void GameView::displayMove(Move move)
+{
+	this->acceptingClicks = false;
+	this->clearFakeCheckers();
+	gameEngine.move(move);
+	CheckerItem* checker = checkers[move.oldPos];
+	checker->move(move.newPos);
+	checkers[move.newPos] = checker;
+	this->acceptingClicks = false;
 }
 
 void GameView::updateBoardSquare(boardpos_t position, SquareState state)
@@ -130,7 +144,7 @@ void GameView::updateBoardSquare(boardpos_t position, SquareState state)
 	}
 }
 
-void GameView::drawCheckers()
+void GameView::resetBoard()
 {
 	for(boardpos_t k = 0; k < SQUARE_COUNT; k++)
 	{

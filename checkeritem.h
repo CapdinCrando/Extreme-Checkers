@@ -20,6 +20,7 @@ class CheckerItem : public QObject, public QGraphicsEllipseItem
 	Q_OBJECT
 public:
 	CheckerItem(boardpos_t position, SquareState checkerType);
+	void move(boardpos_t newPosition);
 
 signals:
 	void checkerSelected(boardpos_t pos, SquareState checkerType);

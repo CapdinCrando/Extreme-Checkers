@@ -1,5 +1,7 @@
 #include "checkeritem.h"
 
+#include <iostream>
+
 #define BOARD_VIEW_SIZE 512
 #define BOARD_VIEW_STEP (BOARD_VIEW_SIZE / 8)
 #define BOARD_VIEW_OFFSET (BOARD_VIEW_STEP / 8)
@@ -7,11 +9,15 @@
 #define BOARD_VIEW_X(position) BOARD_VIEW_STEP*((position*2 + 1)%8 - ((position/4)%2)) + BOARD_VIEW_OFFSET
 #define BOARD_VIEW_Y(position) BOARD_VIEW_STEP*( position/4) + BOARD_VIEW_OFFSET
 
+#define LABEL_X 10
+#define LABEL_Y 20
+
 CheckerItem::CheckerItem(boardpos_t position, SquareState checkerType)
-	: QGraphicsEllipseItem(BOARD_VIEW_X(position), BOARD_VIEW_Y(position), BOARD_VIEW_SCALE, BOARD_VIEW_SCALE)
+	: QGraphicsEllipseItem(0, 0, BOARD_VIEW_SCALE, BOARD_VIEW_SCALE)
 {
 	// Set position
 	this->position = position;
+	this->setPos(BOARD_VIEW_X(position), BOARD_VIEW_Y(position));
 
 	// Set checker type
 	this->checkerType = checkerType;
@@ -34,12 +40,21 @@ CheckerItem::CheckerItem(boardpos_t position, SquareState checkerType)
 		QGraphicsSimpleTextItem* kingLabel = new QGraphicsSimpleTextItem("K");
 		kingLabel->setBrush(whiteBrush);
 		kingLabel->setParentItem(this);
-		kingLabel->setPos(this->boundingRect().center());
+		QPointF checkerCenter = this->boundingRect().center();
+		QRectF labelBox = kingLabel->boundingRect();
+		kingLabel->setPos(checkerCenter.x() - labelBox.width(), checkerCenter.y() - labelBox.height());
+		kingLabel->setScale(2);
 	}
+}
+
+void CheckerItem::move(boardpos_t newPosition)
+{
+	this->position = newPosition;
+	this->setPos(BOARD_VIEW_X(newPosition), BOARD_VIEW_Y(newPosition));
 }
 
 void CheckerItem::mousePressEvent(QGraphicsSceneMouseEvent* event)
 {
 	Q_UNUSED(event);
-	checkerSelected(this->position, this->checkerType);
+	emit checkerSelected(this->position, this->checkerType);
 }

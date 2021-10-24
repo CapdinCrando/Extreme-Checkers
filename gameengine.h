@@ -6,11 +6,6 @@
 
 #define BOARD_POS_INVALID -1
 
-struct Move {
-	uint8_t oldPos = -1;
-	uint8_t newPos = -1;
-};
-
 const boardpos_t cornerList[SQUARE_COUNT][4] = {
 	{-1, -1, 4, 5},{-1, -1, 5, 6},{-1, -1, 6, 7},{-1, -1, 7, -1},
 	{-1, 0, -1, 8},{0, 1, 8, 9},{1, 2, 9, 10},{2, 3, 10, 11},
@@ -31,13 +26,12 @@ public:
 	~GameEngine();
 
 	void resetGame();
-	void move(boardpos_t pos1, boardpos_t pos2);
-	std::vector<boardpos_t> getPossibleMoves(boardpos_t pos);
+	void move(Move move);
+	std::vector<Move> getPossibleMoves(boardpos_t pos);
 	SquareState getSquareState(boardpos_t index);
 
 signals:
-	void updateDisplay(BoardState b);
-
+	void displayMove(Move move);
 
 private:
 	GameBoard gameBoard;
