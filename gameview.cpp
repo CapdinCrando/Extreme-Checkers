@@ -102,7 +102,7 @@ void GameView::drawFakeCheckers(boardpos_t pos, SquareState checkerType)
 	{
 		FakeCheckerItem* fakeChecker = new FakeCheckerItem(moves[i], checkerType);
 		scene->addItem(fakeChecker);
-		connect(fakeChecker, &FakeCheckerItem::fakeCheckerSelected, this, &GameView::displayMove, Qt::QueuedConnection);
+		connect(fakeChecker, &FakeCheckerItem::fakeCheckerSelected, this, &GameView::displayMove);
 		fakeItems.push_back(fakeChecker);
 	}
 }

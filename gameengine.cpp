@@ -35,7 +35,10 @@ std::vector<Move> GameEngine::getPossibleMoves(boardpos_t pos)
 	std::vector<Move> testMoves;
 	Move m;
 	m.oldPos = pos;
-	for(uint8_t i = 0; i < 4; i++)
+	SquareState checkerState = getSquareState(pos);
+	uint8_t cornerMax = 2;
+	if(SQUARE_ISKING(checkerState)) cornerMax = 4;
+	for(uint8_t i = 0; i < cornerMax; i++)
 	{
 		// Get move
 		boardpos_t move = cornerList[pos][i];
@@ -48,7 +51,7 @@ std::vector<Move> GameEngine::getPossibleMoves(boardpos_t pos)
 			{
 				// Add move to potential moves
 				m.newPos = move;
-				m.moveType = MOVE_JUMP;
+				m.moveType = MOVE_MOVE;
 				testMoves.push_back(m);
 			}
 		}
