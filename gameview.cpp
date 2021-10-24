@@ -115,7 +115,7 @@ void GameView::displayMove(Move move)
 	CheckerItem* checker = checkers[move.oldPos];
 	checker->move(move.newPos);
 	checkers[move.newPos] = checker;
-	this->acceptingClicks = false;
+	this->acceptingClicks = true;
 }
 
 void GameView::updateBoardSquare(boardpos_t position, SquareState state)
