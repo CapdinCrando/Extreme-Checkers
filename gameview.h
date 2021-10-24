@@ -31,6 +31,7 @@ protected:
 
 private:
 	void drawCheckers();
+	void clearFakeCheckers();
 	void updateBoardSquare(boardpos_t position, SquareState checkerType);
 
 	CheckerItem* checkers[32] = {};

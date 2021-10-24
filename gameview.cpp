@@ -77,14 +77,19 @@ void GameView::mousePressEvent(QMouseEvent *event)
 	QGraphicsView::mousePressEvent(event);
 }
 
-void GameView::drawFakeCheckers(boardpos_t pos, SquareState checkerType)
+void GameView::clearFakeCheckers()
 {
-	// Clear old items
 	for(uint8_t i = 0; i < fakeItems.size(); i++)
 	{
 		scene->removeItem(fakeItems[i]);
 	}
 	fakeItems.clear();
+}
+
+void GameView::drawFakeCheckers(boardpos_t pos, SquareState checkerType)
+{
+	// Clear old items
+	this->clearFakeCheckers();
 
 	// Get moves
 	std::vector<boardpos_t> moves = gameEngine.getPossibleMoves(pos);
