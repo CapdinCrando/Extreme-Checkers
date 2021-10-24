@@ -102,12 +102,12 @@ void GameView::drawFakeCheckers(boardpos_t pos, SquareState checkerType)
 	{
 		FakeCheckerItem* fakeChecker = new FakeCheckerItem(moves[i], checkerType);
 		scene->addItem(fakeChecker);
-		connect(fakeChecker, &FakeCheckerItem::fakeCheckerSelected, this, &GameView::displayMove);
+		connect(fakeChecker, &FakeCheckerItem::fakeCheckerSelected, this, &GameView::displayRedMove);
 		fakeItems.push_back(fakeChecker);
 	}
 }
 
-void GameView::displayMove(Move move)
+void GameView::displayRedMove(Move move)
 {
 	this->acceptingClicks = false;
 	this->clearFakeCheckers();
@@ -115,6 +115,23 @@ void GameView::displayMove(Move move)
 	CheckerItem* checker = checkers[move.oldPos];
 	checker->move(move.newPos);
 	checkers[move.newPos] = checker;
+	//if(checkers[move.oldPos] == nullptr) std::cout << "ahh" << std::endl;
+	displayBlackMove();
+}
+
+void GameView::displayBlackMove()
+{
+	Move move;
+	try {
+		move = gameEngine.getAIMove();
+	}  catch (std::exception e) {
+		std::cerr << e.what() << std::endl;
+	}
+	gameEngine.move(move);
+	CheckerItem* checker = checkers[move.oldPos];
+	checker->move(move.newPos);
+	checkers[move.newPos] = checker;
+	//if(checkers[move.oldPos] == nullptr) std::cout << "ahh" << std::endl;
 	this->acceptingClicks = true;
 }
 

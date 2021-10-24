@@ -1,5 +1,7 @@
 #include "gameengine.h"
 
+#include <unordered_set>
+
 GameEngine::GameEngine()
 {
 
@@ -57,4 +59,39 @@ std::vector<Move> GameEngine::getPossibleMoves(boardpos_t pos)
 		}
 	}
 	return testMoves;
+}
+
+Move GameEngine::getAIMove()
+{
+	Move m;
+	std::vector<Move> moves;
+	for(uint8_t i = 0; i < SQUARE_COUNT; i++)
+	{
+		SquareState state = this->getSquareState(i);
+		if(SQUARE_ISBLACK(state))
+		{
+			uint8_t cornerMin = 2;
+			if(SQUARE_ISKING(state)) cornerMin = 0;
+			for(uint8_t j = cornerMin; j < 4; j++)
+			{
+				// Get move
+				boardpos_t move = cornerList[i][j];
+
+				// Check if position is invalid
+				if(move != BOARD_POS_INVALID)
+				{
+					// Check if space is empty
+					if(gameBoard.getSquareState(move) == SQUARE_EMPTY)
+					{
+						// Add move to potential moves
+						m.oldPos = i;
+						m.newPos = move;
+						m.moveType = MOVE_MOVE;
+						moves.push_back(m);
+					}
+				}
+			}
+		}
+	}
+	return moves[rand() % moves.size()];
 }

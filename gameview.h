@@ -22,7 +22,8 @@ public:
 
 public slots:
 	void drawFakeCheckers(boardpos_t pos, SquareState state);
-	void displayMove(Move move);
+	void displayRedMove(Move move);
+	void displayBlackMove();
 
 protected:
 	QSize sizeHint() const override;
