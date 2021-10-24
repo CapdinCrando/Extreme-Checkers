@@ -7,6 +7,8 @@ GameView::GameView(QWidget *parent) : QGraphicsView(parent)
 {
 	this->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 	this->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+	this->setAutoFillBackground(true);
+	this->setCacheMode(QGraphicsView::CacheBackground);
 
 	scene = new QGraphicsScene();
 	this->setScene(scene);
@@ -92,7 +94,6 @@ void GameView::drawFakeCheckers(boardpos_t pos, SquareState checkerType)
 	{
 		FakeCheckerItem* fakeChecker = new FakeCheckerItem(moves[i], checkerType);
 		scene->addItem(fakeChecker);
-		// TODO: FIX BUG
 		// TODO: CONNECT fakeCheckerPress
 		fakeItems.push_back(fakeChecker);
 	}
