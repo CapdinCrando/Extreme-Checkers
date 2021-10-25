@@ -31,7 +31,7 @@ SquareState GameEngine::getSquareState(boardpos_t index)
 	return gameBoard.getSquareState(index);
 }
 
-// TODO: Add jumps & multijumps
+// TODO: Add multijumps
 std::vector<Move> GameEngine::getPossibleMoves(boardpos_t pos)
 {
 	std::vector<Move> testMoves;
@@ -56,11 +56,29 @@ std::vector<Move> GameEngine::getPossibleMoves(boardpos_t pos)
 				m.moveType = MOVE_MOVE;
 				testMoves.push_back(m);
 			}
+			else if(SQUARE_ISBLACK(move))
+			{
+				// Get jump
+				boardpos_t jump = cornerList[move][i];
+				// Check if position is invalid
+				if(jump != BOARD_POS_INVALID)
+				{
+					// Check if space is empty
+					if(gameBoard.getSquareState(jump) == SQUARE_EMPTY)
+					{
+						// Add move to potential moves
+						m.newPos = jump;
+						m.moveType = MOVE_JUMP;
+						testMoves.push_back(m);
+					}
+				}
+			}
 		}
 	}
 	return testMoves;
 }
 
+// TODO: CHECK FOR MOVE
 Move GameEngine::getAIMove()
 {
 	Move m;
