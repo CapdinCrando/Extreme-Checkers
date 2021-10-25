@@ -35,11 +35,15 @@ signals:
 	void displayMultiJump(std::vector<Move> moves, SquareState checkerType);
 	void blackMoveFinished();
 
+private slots:
+	void checkIfJumpExists();
+
 private:
 	void move(Move move);
 	void executeBlackMove(Move move);
 	Move getAIMove();
 	GameBoard gameBoard;
+	bool jumpExists = false;
 };
 
 #endif // GAMEENGINE_H

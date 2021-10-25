@@ -4,7 +4,7 @@
 
 GameEngine::GameEngine()
 {
-
+	connect(this, &GameEngine::blackMoveFinished, this, &GameEngine::checkIfJumpExists);
 }
 
 GameEngine::~GameEngine()
@@ -18,6 +18,7 @@ void GameEngine::resetGame()
 	{
 		gameBoard.setSquareState(i, initialGame[i]);
 	}
+	jumpExists = false;
 }
 
 void GameEngine::move(Move move)
@@ -134,6 +135,52 @@ SquareState GameEngine::getSquareState(boardpos_t index)
 	return gameBoard.getSquareState(index);
 }
 
+void GameEngine::checkIfJumpExists()
+{
+	jumpExists = false;
+	for(uint8_t i = 0; i < SQUARE_COUNT; i++)
+	{
+		SquareState state = this->getSquareState(i);
+		if(SQUARE_ISNOTEMPTY(state))
+		{
+			if(!(SQUARE_ISBLACK(state)))
+			{
+				uint8_t cornerMax = 2;
+				if(SQUARE_ISKING(state)) cornerMax = 4;
+				for(uint8_t j = 0; j < cornerMax; j++)
+				{
+					// Get move
+					boardpos_t move = cornerList[i][j];
+					// Check if position is invalid
+					if(move != BOARD_POS_INVALID)
+					{
+						// Check if space is empty
+						SquareState moveState = gameBoard.getSquareState(move);
+						if(SQUARE_ISNOTEMPTY(moveState))
+						{
+							if(SQUARE_ISBLACK(moveState))
+							{
+								// Get jump
+								boardpos_t jump = cornerList[move][j];
+								// Check if position is invalid
+								if(jump != BOARD_POS_INVALID)
+								{
+									// Check if space is empty
+									if(SQUARE_ISEMPTY(gameBoard.getSquareState(jump)))
+									{
+										jumpExists = true;
+										return;
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
 std::vector<Move> GameEngine::getPossibleMoves(boardpos_t pos)
 {
 	std::vector<Move> testMoves;
@@ -153,29 +200,32 @@ std::vector<Move> GameEngine::getPossibleMoves(boardpos_t pos)
 		{
 			// Check if space is empty
 			SquareState moveState = gameBoard.getSquareState(move);
-			if(SQUARE_ISEMPTY(moveState))
+			if(jumpExists)
+			{
+				if(SQUARE_ISBLACK(moveState))
+				{
+					// Get jump
+					boardpos_t jump = cornerList[move][i];
+					// Check if position is invalid
+					if(jump != BOARD_POS_INVALID)
+					{
+						// Check if space is empty
+						if(SQUARE_ISEMPTY(gameBoard.getSquareState(jump)))
+						{
+							// Add move to potential moves
+							m.newPos = jump;
+							m.jumpPos = move;
+							testJumps.push_back(m);
+						}
+					}
+				}
+			}
+			else if(SQUARE_ISEMPTY(moveState))
 			{
 				// Add move to potential moves
 				m.newPos = move;
 				m.jumpPos = -1;
 				testMoves.push_back(m);
-			}
-			else if(SQUARE_ISBLACK(moveState))
-			{
-				// Get jump
-				boardpos_t jump = cornerList[move][i];
-				// Check if position is invalid
-				if(jump != BOARD_POS_INVALID)
-				{
-					// Check if space is empty
-					if(SQUARE_ISEMPTY(gameBoard.getSquareState(jump)))
-					{
-						// Add move to potential moves
-						m.newPos = jump;
-						m.jumpPos = move;
-						testJumps.push_back(m);
-					}
-				}
 			}
 		}
 	}
