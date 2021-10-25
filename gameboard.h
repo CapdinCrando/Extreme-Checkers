@@ -21,19 +21,11 @@ enum SquareState : uint8_t {
 };
 
 typedef int8_t boardpos_t;
-typedef int8_t movetype_t;
-
-enum MoveType : movetype_t {
-	MOVE_INVALID = -1,
-	MOVE_MOVE = 0,
-	MOVE_JUMP = 1,
-	MOVE_JUMP_MULTI = 2
-};
 
 struct Move {
 	boardpos_t oldPos = -1;
 	boardpos_t newPos = -1;
-	movetype_t moveType = -1;
+	boardpos_t jumpPos = -1;
 };
 
 typedef std::bitset<SQUARE_COUNT*BITS_PER_SQUARE> BoardState;

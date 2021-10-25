@@ -23,6 +23,10 @@ GameView::GameView(QWidget *parent) : QGraphicsView(parent)
 	kingLabel = new QLabel();
 	kingLabel->setText("K");
 
+	connect(&gameEngine, &GameEngine::blackMoveFinished, this, &GameView::blackMoveFinished);
+	connect(&gameEngine, &GameEngine::displayMove, this, &GameView::displayMove);
+	connect(&gameEngine, &GameEngine::displayMultiJump, this, &GameView::drawPossibleMoves);
+
 	gameEngine.resetGame();
 
 	resetBoard();
@@ -89,50 +93,52 @@ void GameView::clearFakeCheckers()
 	fakeItems.clear();
 }
 
-void GameView::drawFakeCheckers(boardpos_t pos, SquareState checkerType)
+void GameView::onCheckerSelected(boardpos_t pos, SquareState checkerType)
+{
+	// Get moves
+	std::vector<Move> moves = gameEngine.getPossibleMoves(pos);
+
+	// Display moves
+	this->drawPossibleMoves(moves, checkerType);
+}
+
+void GameView::drawPossibleMoves(std::vector<Move> moves, SquareState checkerType)
 {
 	// Clear old items
 	this->clearFakeCheckers();
-
-	// Get moves
-	std::vector<Move> moves = gameEngine.getPossibleMoves(pos);
 
 	// Add new items
 	for(uint8_t i = 0; i < moves.size(); i++)
 	{
 		FakeCheckerItem* fakeChecker = new FakeCheckerItem(moves[i], checkerType);
 		scene->addItem(fakeChecker);
-		connect(fakeChecker, &FakeCheckerItem::fakeCheckerSelected, this, &GameView::displayRedMove);
+		connect(fakeChecker, &FakeCheckerItem::fakeCheckerSelected, this, &GameView::startRedMove);
 		fakeItems.push_back(fakeChecker);
 	}
+	this->acceptingClicks = true;
 }
 
-void GameView::displayRedMove(Move move)
+void GameView::startRedMove(Move move)
 {
 	this->acceptingClicks = false;
 	this->clearFakeCheckers();
-	gameEngine.move(move);
-	CheckerItem* checker = checkers[move.oldPos];
-	checker->move(move.newPos);
-	checkers[move.newPos] = checker;
-	//if(checkers[move.oldPos] == nullptr) std::cout << "ahh" << std::endl;
-	displayBlackMove();
+	gameEngine.executeRedMove(move);
 }
 
-void GameView::displayBlackMove()
+void GameView::blackMoveFinished()
 {
-	Move move;
-	try {
-		move = gameEngine.getAIMove();
-	}  catch (std::exception e) {
-		std::cerr << e.what() << std::endl;
-	}
-	gameEngine.move(move);
+	this->acceptingClicks = true;
+}
+
+void GameView::displayMove(Move move)
+{
 	CheckerItem* checker = checkers[move.oldPos];
 	checker->move(move.newPos);
 	checkers[move.newPos] = checker;
-	//if(checkers[move.oldPos] == nullptr) std::cout << "ahh" << std::endl;
-	this->acceptingClicks = true;
+	if(move.jumpPos != BOARD_POS_INVALID)
+	{
+		scene->removeItem(checkers[move.jumpPos]);
+	}
 }
 
 void GameView::updateBoardSquare(boardpos_t position, SquareState state)
@@ -153,7 +159,7 @@ void GameView::updateBoardSquare(boardpos_t position, SquareState state)
 			checker = new CheckerItem(position, state);
 			if(!(SQUARE_ISBLACK(state)))
 			{
-				connect(checker, &CheckerItem::checkerSelected, this, &GameView::drawFakeCheckers);
+				connect(checker, &CheckerItem::checkerSelected, this, &GameView::onCheckerSelected);
 			}
 			scene->addItem(checker);
 			checkers[position] = checker;

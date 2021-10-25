@@ -21,9 +21,11 @@ public:
 	~GameView();
 
 public slots:
-	void drawFakeCheckers(boardpos_t pos, SquareState state);
-	void displayRedMove(Move move);
-	void displayBlackMove();
+	void onCheckerSelected(boardpos_t pos, SquareState state);
+	void drawPossibleMoves(std::vector<Move> moves, SquareState checkerType);
+	void startRedMove(Move move);
+	void blackMoveFinished();
+	void displayMove(Move move);
 
 protected:
 	QSize sizeHint() const override;

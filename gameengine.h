@@ -17,7 +17,7 @@ const boardpos_t cornerList[SQUARE_COUNT][4] = {
 	{-1, 24, -1, -1},{24, 25, -1, -1},{25, 26, -1, -1},{26, 27, -1, -1}
 };
 
-class GameEngine : QObject
+class GameEngine : public QObject
 {
 	Q_OBJECT
 
@@ -26,15 +26,19 @@ public:
 	~GameEngine();
 
 	void resetGame();
-	void move(Move move);
 	std::vector<Move> getPossibleMoves(boardpos_t pos);
 	SquareState getSquareState(boardpos_t index);
-	Move getAIMove();
+	void executeRedMove(Move move);
 
 signals:
 	void displayMove(Move move);
+	void displayMultiJump(std::vector<Move> moves, SquareState checkerType);
+	void blackMoveFinished();
 
 private:
+	void move(Move move);
+	void executeBlackMove(Move move);
+	Move getAIMove();
 	GameBoard gameBoard;
 };
 
