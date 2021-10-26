@@ -18,8 +18,7 @@ GameView::GameView(QWidget *parent) : QGraphicsView(parent)
 	connect(&gameEngine, &GameEngine::blackMoveFinished, this, &GameView::blackMoveFinished);
 	connect(&gameEngine, &GameEngine::displayMove, this, &GameView::displayMove);
 	connect(&gameEngine, &GameEngine::displayMultiJump, this, &GameView::drawPossibleMoves);
-
-	gameEngine.resetGame();
+	connect(&gameEngine, &GameEngine::gameOver, this, &GameView::gameOver);
 
 	resetBoard();
 
@@ -88,7 +87,7 @@ void GameView::clearFakeCheckers()
 void GameView::onCheckerSelected(boardpos_t pos, SquareState checkerType)
 {
 	// Get moves
-	std::vector<Move> moves = gameEngine.getPossibleMoves(pos);
+	std::vector<Move> moves = gameEngine.getRedMoves(pos);
 
 	// Display moves
 	this->drawPossibleMoves(moves, checkerType);
@@ -127,44 +126,42 @@ void GameView::displayMove(Move move, bool kingPiece)
 	CheckerItem* checker = checkers[move.oldPos];
 	checker->move(move.newPos);
 	checkers[move.newPos] = checker;
+	checkers[move.oldPos] = nullptr;
 	if(move.jumpPos != BOARD_POS_INVALID)
 	{
 		scene->removeItem(checkers[move.jumpPos]);
+		checkers[move.jumpPos] = nullptr;
 	}
 	if(kingPiece) checker->king();
 }
 
-void GameView::updateBoardSquare(boardpos_t position, SquareState state)
+void GameView::resetBoard()
 {
-	CheckerItem* checker = checkers[position];
-	if(SQUARE_ISEMPTY(state))
+	acceptingClicks = false;
+	gameEngine.resetGame();
+	for(boardpos_t k = 0; k < SQUARE_COUNT; k++)
 	{
+		SquareState state = gameEngine.getSquareState(k);
+		CheckerItem* checker = checkers[k];
 		if(checker != nullptr)
 		{
 			scene->removeItem(checker);
-			checkers[position] = nullptr;
 		}
-	}
-	else
-	{
-		if(checkers[position] == nullptr)
+		if(SQUARE_ISEMPTY(state))
 		{
-			checker = new CheckerItem(position, state);
+			checkers[k] = nullptr;
+		}
+		else
+		{
+			checker = new CheckerItem(k, state);
 			if(!(SQUARE_ISBLACK(state)))
 			{
 				connect(checker, &CheckerItem::checkerSelected, this, &GameView::onCheckerSelected);
 			}
 			scene->addItem(checker);
-			checkers[position] = checker;
+			checkers[k] = checker;
 		}
 	}
-}
-
-void GameView::resetBoard()
-{
-	for(boardpos_t k = 0; k < SQUARE_COUNT; k++)
-	{
-		updateBoardSquare(k, gameEngine.getSquareState(k));
-	}
+	acceptingClicks = true;
 }
 

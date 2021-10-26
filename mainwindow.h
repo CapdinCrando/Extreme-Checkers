@@ -2,6 +2,8 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QMessageBox>
+#include "defines.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -11,11 +13,15 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
+public slots:
+	void gameOver(GameState gameState);
+
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
 private:
     Ui::MainWindow *ui;
+	QMessageBox* gameOverBox;
 };
 #endif // MAINWINDOW_H

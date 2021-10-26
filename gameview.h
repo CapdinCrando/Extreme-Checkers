@@ -20,12 +20,16 @@ public:
 	explicit GameView(QWidget *parent = nullptr);
 	~GameView();
 
+signals:
+	void gameOver(GameState gameState);
+
 public slots:
 	void onCheckerSelected(boardpos_t pos, SquareState state);
 	void drawPossibleMoves(std::vector<Move> moves, SquareState checkerType);
 	void startRedMove(Move move);
 	void blackMoveFinished();
 	void displayMove(Move move, bool kingPiece);
+	void resetBoard();
 
 protected:
 	QSize sizeHint() const override;
@@ -34,9 +38,7 @@ protected:
 	void mousePressEvent(QMouseEvent *event) override;
 
 private:
-	void resetBoard();
 	void clearFakeCheckers();
-	void updateBoardSquare(boardpos_t position, SquareState checkerType);
 
 	CheckerItem* checkers[32] = {};
 	std::vector<FakeCheckerItem*> fakeItems;

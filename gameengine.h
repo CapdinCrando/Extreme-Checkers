@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include "gameboard.h"
+#include "defines.h"
 
 #define BOARD_POS_INVALID -1
 
@@ -26,7 +27,7 @@ public:
 	~GameEngine();
 
 	void resetGame();
-	std::vector<Move> getPossibleMoves(boardpos_t pos);
+	std::vector<Move> getRedMoves(boardpos_t pos);
 	SquareState getSquareState(boardpos_t index);
 	void executeRedMove(Move move);
 
@@ -34,14 +35,18 @@ signals:
 	void displayMove(Move move, bool kingPiece);
 	void displayMultiJump(std::vector<Move> moves, SquareState checkerType);
 	void blackMoveFinished();
-
-private slots:
-	void checkIfJumpExists();
+	void gameOver(GameState gameState);
 
 private:
 	void move(Move move);
 	void executeBlackMove(Move move);
 	bool checkForKing(boardpos_t pos);
+	bool checkRedWin();
+	bool checkBlackWin();
+	void checkRedTie();
+	void checkBlackTie();
+	bool checkIfRedMoveExists();
+	std::vector<Move> getAllBlackMoves();
 	Move getAIMove();
 	GameBoard gameBoard;
 	bool jumpExists = false;

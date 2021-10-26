@@ -4,7 +4,7 @@
 
 GameEngine::GameEngine()
 {
-	connect(this, &GameEngine::blackMoveFinished, this, &GameEngine::checkIfJumpExists);
+
 }
 
 GameEngine::~GameEngine()
@@ -26,7 +26,6 @@ void GameEngine::move(Move move)
 	gameBoard.move(move.oldPos, move.newPos);
 }
 
-// TODO: CHECK WIN STATE
 void GameEngine::executeRedMove(Move move)
 {
 	std::cout << "Executing red move: " << +move.oldPos << "," << +move.jumpPos << "," << +move.newPos << std::endl;
@@ -72,12 +71,18 @@ void GameEngine::executeRedMove(Move move)
 			return;
 		}
 	}
+	if(checkRedWin())
+	{
+		emit gameOver(GAME_OVER_RED_WIN);
+		return;
+	}
 	executeBlackMove(getAIMove());
 }
 
-// TODO: CHECK WIN STATE
 void GameEngine::executeBlackMove(Move move)
 {
+	if(move.oldPos == -1) return;
+
 	std::cout << "Executing black move: " << +move.oldPos << "," << +move.jumpPos << "," << +move.newPos << std::endl;
 	this->move(move);
 	emit displayMove(move, this->checkForKing(move.newPos));
@@ -118,6 +123,7 @@ void GameEngine::executeBlackMove(Move move)
 		if(newJumps.empty())
 		{
 			emit blackMoveFinished();
+			if(!checkIfRedMoveExists()) checkRedTie();
 		}
 		else
 		{
@@ -127,6 +133,12 @@ void GameEngine::executeBlackMove(Move move)
 	else
 	{
 		emit blackMoveFinished();
+		if(!checkIfRedMoveExists()) checkRedTie();
+	}
+	if(checkBlackWin())
+	{
+		emit gameOver(GAME_OVER_BLACK_WIN);
+		return;
 	}
 }
 
@@ -140,14 +152,72 @@ bool GameEngine::checkForKing(boardpos_t pos)
 	return false;
 }
 
+bool GameEngine::checkBlackWin()
+{
+	for(uint8_t i = 0; i < SQUARE_COUNT; i++)
+	{
+		SquareState state = gameBoard.getSquareState(i);
+		if(SQUARE_ISNOTEMPTY(state))
+		{
+			if(!(SQUARE_ISBLACK(state)))
+			{
+				return false;
+			}
+		}
+	}
+	return true;
+}
+
+bool GameEngine::checkRedWin()
+{
+	for(uint8_t i = 0; i < SQUARE_COUNT; i++)
+	{
+		SquareState state = gameBoard.getSquareState(i);
+		if(SQUARE_ISNOTEMPTY(state))
+		{
+			if(SQUARE_ISBLACK(state))
+			{
+				return false;
+			}
+		}
+	}
+	return true;
+}
+
+void GameEngine::checkRedTie()
+{
+	// TODO: Performance improvement
+	if(getAllBlackMoves().empty())
+	{
+		emit gameOver(GAME_OVER_TIE);
+	}
+	else
+	{
+		emit gameOver(GAME_OVER_BLACK_WIN);
+	}
+}
+
+void GameEngine::checkBlackTie()
+{
+	if(checkIfRedMoveExists())
+	{
+		emit gameOver(GAME_OVER_RED_WIN);
+	}
+	else
+	{
+		emit gameOver(GAME_OVER_TIE);
+	}
+}
+
 SquareState GameEngine::getSquareState(boardpos_t index)
 {
 	return gameBoard.getSquareState(index);
 }
 
-void GameEngine::checkIfJumpExists()
+bool GameEngine::checkIfRedMoveExists()
 {
 	jumpExists = false;
+	bool moveExists = false;
 	for(uint8_t i = 0; i < SQUARE_COUNT; i++)
 	{
 		SquareState state = this->getSquareState(i);
@@ -179,71 +249,81 @@ void GameEngine::checkIfJumpExists()
 									if(SQUARE_ISEMPTY(gameBoard.getSquareState(jump)))
 									{
 										jumpExists = true;
-										return;
+										return true;
 									}
 								}
 							}
 						}
+						else moveExists = true;
 					}
 				}
 			}
 		}
 	}
+	return moveExists;
 }
 
-std::vector<Move> GameEngine::getPossibleMoves(boardpos_t pos)
+std::vector<Move> GameEngine::getRedMoves(boardpos_t pos)
 {
 	std::vector<Move> testMoves;
 	std::vector<Move> testJumps;
 	Move m;
 	m.oldPos = pos;
 	SquareState checkerState = getSquareState(pos);
-	uint8_t cornerMax = 2;
-	if(SQUARE_ISKING(checkerState)) cornerMax = 4;
-	for(uint8_t i = 0; i < cornerMax; i++)
+	if(SQUARE_ISNOTEMPTY(checkerState))
 	{
-		// Get move
-		boardpos_t move = cornerList[pos][i];
-
-		// Check if position is invalid
-		if(move != BOARD_POS_INVALID)
+		if(!(SQUARE_ISBLACK(checkerState)))
 		{
-			// Check if space is empty
-			SquareState moveState = gameBoard.getSquareState(move);
-			if(jumpExists)
+			uint8_t cornerMax = 2;
+			if(SQUARE_ISKING(checkerState)) cornerMax = 4;
+			for(uint8_t i = 0; i < cornerMax; i++)
 			{
-				if(SQUARE_ISBLACK(moveState))
+				// Get move
+				boardpos_t move = cornerList[pos][i];
+
+				// Check if position is invalid
+				if(move != BOARD_POS_INVALID)
 				{
-					// Get jump
-					boardpos_t jump = cornerList[move][i];
-					// Check if position is invalid
-					if(jump != BOARD_POS_INVALID)
+					// Check if space is empty
+					SquareState moveState = gameBoard.getSquareState(move);
+					if(jumpExists)
 					{
-						// Check if space is empty
-						if(SQUARE_ISEMPTY(gameBoard.getSquareState(jump)))
+						if(SQUARE_ISBLACK(moveState))
 						{
-							// Add move to potential moves
-							m.newPos = jump;
-							m.jumpPos = move;
-							testJumps.push_back(m);
+							// Get jump
+							boardpos_t jump = cornerList[move][i];
+							// Check if position is invalid
+							if(jump != BOARD_POS_INVALID)
+							{
+								// Check if space is empty
+								if(SQUARE_ISEMPTY(gameBoard.getSquareState(jump)))
+								{
+									// Add move to potential moves
+									m.newPos = jump;
+									m.jumpPos = move;
+									testJumps.push_back(m);
+								}
+							}
 						}
+					}
+					else if(SQUARE_ISEMPTY(moveState))
+					{
+						// Add move to potential moves
+						m.newPos = move;
+						m.jumpPos = -1;
+						testMoves.push_back(m);
 					}
 				}
 			}
-			else if(SQUARE_ISEMPTY(moveState))
-			{
-				// Add move to potential moves
-				m.newPos = move;
-				m.jumpPos = -1;
-				testMoves.push_back(m);
-			}
 		}
 	}
+
 	if(testJumps.empty()) return testMoves;
-	else return testJumps;
+	return testJumps;
 }
 
-Move GameEngine::getAIMove()
+
+std::vector<Move> GameEngine::getAllBlackMoves()
 {
 	Move m;
 	std::vector<Move> moves;
@@ -294,6 +374,17 @@ Move GameEngine::getAIMove()
 			}
 		}
 	}
-	if(jumps.empty()) return moves[rand() % moves.size()];
-	else return jumps[rand() % jumps.size()];
+	if(jumps.empty()) return moves;
+	return jumps;
+}
+
+Move GameEngine::getAIMove()
+{
+	std::vector<Move> moves = getAllBlackMoves();
+	if(moves.empty())
+	{
+		checkBlackTie();
+		return Move();
+	}
+	return moves[rand() % moves.size()];
 }
