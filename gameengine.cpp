@@ -26,7 +26,7 @@ void GameEngine::move(Move move)
 	gameBoard.move(move.oldPos, move.newPos);
 }
 
-// TODO: CHECK WIN STATE & KING
+// TODO: CHECK WIN STATE
 void GameEngine::executeRedMove(Move move)
 {
 	std::cout << "Executing red move: " << +move.oldPos << "," << +move.jumpPos << "," << +move.newPos << std::endl;
@@ -75,7 +75,7 @@ void GameEngine::executeRedMove(Move move)
 	executeBlackMove(getAIMove());
 }
 
-// TODO: CHECK WIN STATE & KING
+// TODO: CHECK WIN STATE
 void GameEngine::executeBlackMove(Move move)
 {
 	std::cout << "Executing black move: " << +move.oldPos << "," << +move.jumpPos << "," << +move.newPos << std::endl;
