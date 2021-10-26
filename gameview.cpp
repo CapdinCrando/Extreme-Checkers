@@ -7,24 +7,23 @@ GameView::GameView(QWidget *parent) : QGraphicsView(parent)
 {
 	this->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 	this->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+	this->setAutoFillBackground(true);
+	this->setCacheMode(QGraphicsView::CacheBackground);
+	this->setAlignment(Qt::AlignLeft | Qt::AlignTop);
 
 	scene = new QGraphicsScene();
 	this->setScene(scene);
 	this->scene->setSceneRect(0, 0, BOARD_VIEW_SIZE, BOARD_VIEW_SIZE);
 
-	redPen = QPen(Qt::red);
-	blackPen = QPen(Qt::black);
-	redBrush = QBrush(Qt::red);
-	blackBrush = QBrush(Qt::black);
+	connect(&gameEngine, &GameEngine::blackMoveFinished, this, &GameView::blackMoveFinished);
+	connect(&gameEngine, &GameEngine::displayMove, this, &GameView::displayMove);
+	connect(&gameEngine, &GameEngine::displayMultiJump, this, &GameView::drawPossibleMoves);
+	connect(&gameEngine, &GameEngine::gameOver, this, &GameView::gameOver);
 
-	kingLabel = new QLabel();
-	kingLabel->setText("K");
-
-	gameEngine.resetGame();
-
-	drawCheckers();
+	resetBoard();
 
 	this->show();
+	acceptingClicks = true;
 }
 
 GameView::~GameView()
@@ -70,44 +69,99 @@ void GameView::drawBackground(QPainter *painter, const QRectF &rect)
 	painter->drawPixmap(rect, pixmap, QRectF(pixmap.rect()));
 }
 
-void GameView::updateBoardSquare(boardpos_t position, SquareState state)
+void GameView::mousePressEvent(QMouseEvent *event)
 {
-	if(SQUARE_ISEMPTY(state))
+	if(acceptingClicks) QGraphicsView::mousePressEvent(event);
+	else event->ignore();
+}
+
+void GameView::clearFakeCheckers()
+{
+	for(uint8_t i = 0; i < fakeItems.size(); i++)
 	{
-		QGraphicsEllipseItem* checker = checkers[position];
+		scene->removeItem(fakeItems[i]);
+	}
+	fakeItems.clear();
+}
+
+void GameView::onCheckerSelected(boardpos_t pos, SquareState checkerType)
+{
+	// Get moves
+	std::vector<Move> moves = gameEngine.getRedMoves(pos);
+
+	// Display moves
+	this->drawPossibleMoves(moves, checkerType);
+}
+
+void GameView::drawPossibleMoves(std::vector<Move> moves, SquareState checkerType)
+{
+	// Clear old items
+	this->clearFakeCheckers();
+
+	// Add new items
+	for(uint8_t i = 0; i < moves.size(); i++)
+	{
+		FakeCheckerItem* fakeChecker = new FakeCheckerItem(moves[i], checkerType);
+		scene->addItem(fakeChecker);
+		connect(fakeChecker, &FakeCheckerItem::fakeCheckerSelected, this, &GameView::startRedMove);
+		fakeItems.push_back(fakeChecker);
+	}
+	this->acceptingClicks = true;
+}
+
+void GameView::startRedMove(Move move)
+{
+	this->acceptingClicks = false;
+	this->clearFakeCheckers();
+	gameEngine.executeRedMove(move);
+}
+
+void GameView::blackMoveFinished()
+{
+	this->acceptingClicks = true;
+}
+
+void GameView::displayMove(Move move, bool kingPiece)
+{
+	CheckerItem* checker = checkers[move.oldPos];
+	checker->move(move.newPos);
+	checkers[move.newPos] = checker;
+	checkers[move.oldPos] = nullptr;
+	if(move.jumpPos != BOARD_POS_INVALID)
+	{
+		scene->removeItem(checkers[move.jumpPos]);
+		checkers[move.jumpPos] = nullptr;
+	}
+	if(kingPiece) checker->king();
+}
+
+void GameView::resetBoard()
+{
+	acceptingClicks = false;
+	gameEngine.resetGame();
+	for(boardpos_t k = 0; k < SQUARE_COUNT; k++)
+	{
+		SquareState state = gameEngine.getSquareState(k);
+		CheckerItem* checker = checkers[k];
 		if(checker != nullptr)
 		{
 			scene->removeItem(checker);
-			checkers[position] = nullptr;
 		}
-	}
-	else
-	{
-		if(checkers[position] == nullptr)
+		if(SQUARE_ISEMPTY(state))
 		{
-			int y_scale = position/4;
-			int x = BOARD_VIEW_STEP*((position*2 + 1)%8 - (y_scale%2)) + BOARD_VIEW_OFFSET;
-			int y = BOARD_VIEW_STEP*(y_scale) + BOARD_VIEW_OFFSET;
-
-			QGraphicsEllipseItem* checker;
-			if(SQUARE_ISBLACK(state)) checker = scene->addEllipse(x, y, BOARD_VIEW_SCALE, BOARD_VIEW_SCALE, redPen, blackBrush);
-			else checker = scene->addEllipse(x, y, BOARD_VIEW_SCALE, BOARD_VIEW_SCALE, blackPen, redBrush);
-			if(SQUARE_ISKING(state))
+			checkers[k] = nullptr;
+		}
+		else
+		{
+			checker = new CheckerItem(k, state);
+			if(!(SQUARE_ISBLACK(state)))
 			{
-				QGraphicsProxyWidget *proxyWidget = new QGraphicsProxyWidget(checker);
-				proxyWidget->setWidget(kingLabel);
-				proxyWidget->setPos(checker->boundingRect().center()-kingLabel->rect().center());
+				connect(checker, &CheckerItem::checkerSelected, this, &GameView::onCheckerSelected);
 			}
-			checkers[position] = checker;
+			scene->addItem(checker);
+			checkers[k] = checker;
 		}
 	}
-}
-
-void GameView::drawCheckers()
-{
-	for(boardpos_t k = 0; k < SQUARE_COUNT; k++)
-	{
-		updateBoardSquare(k, gameEngine.getSquareState(k));
-	}
+	acceptingClicks = true;
 }
 

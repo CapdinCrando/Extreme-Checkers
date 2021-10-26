@@ -5,6 +5,8 @@
 #include <QObject>
 #include <QLabel>
 #include "gameengine.h"
+#include "checkeritem.h"
+#include "fakecheckeritem.h"
 
 #define BOARD_VIEW_SIZE 512
 #define BOARD_VIEW_STEP (BOARD_VIEW_SIZE / 8)
@@ -18,28 +20,36 @@ public:
 	explicit GameView(QWidget *parent = nullptr);
 	~GameView();
 
+signals:
+	void gameOver(GameState gameState);
+
+public slots:
+	void onCheckerSelected(boardpos_t pos, SquareState state);
+	void drawPossibleMoves(std::vector<Move> moves, SquareState checkerType);
+	void startRedMove(Move move);
+	void blackMoveFinished();
+	void displayMove(Move move, bool kingPiece);
+	void resetBoard();
+
 protected:
 	QSize sizeHint() const override;
 	void resizeEvent(QResizeEvent*) override;
 	void drawBackground(QPainter *painter, const QRectF &rect) override;
+	void mousePressEvent(QMouseEvent *event) override;
 
 private:
-	void drawCheckers();
-	void updateBoardSquare(boardpos_t position, SquareState state);
+	void clearFakeCheckers();
 
-	QGraphicsEllipseItem* checkers[32] = {};
+	CheckerItem* checkers[32] = {};
+	std::vector<FakeCheckerItem*> fakeItems;
 
 	QGraphicsScene* scene;
 
 	GameEngine gameEngine;
 
 	mutable QSize lastSize;
-	QPen redPen;
-	QPen blackPen;
-	QBrush redBrush;
-	QBrush blackBrush;
 
-	QLabel* kingLabel;
+	bool acceptingClicks = false;
 };
 
 #endif // GAMEVIEW_H

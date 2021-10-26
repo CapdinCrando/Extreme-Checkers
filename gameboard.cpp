@@ -1,5 +1,7 @@
 #include "gameboard.h"
 
+#include <iostream>
+
 GameBoard::GameBoard()
 {
 
@@ -34,4 +36,13 @@ SquareState GameBoard::getSquareState(boardpos_t index)
 {
 	boardpos_t offset = index*BITS_PER_SQUARE;
 	return static_cast<SquareState>((boardState[offset]) | (boardState[offset+1] << 1) | (boardState[offset+2] << 2));
+}
+
+void GameBoard::kingPiece(boardpos_t pos)
+{
+	boardpos_t offset = pos*BITS_PER_SQUARE;
+	if(boardState[offset + 2] != 0)
+	{
+		boardState[offset] = 1;
+	}
 }

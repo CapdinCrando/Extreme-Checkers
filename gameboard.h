@@ -20,7 +20,13 @@ enum SquareState : uint8_t {
 	SQUARE_BLACK_KING = 7
 };
 
-typedef uint8_t boardpos_t;
+typedef int8_t boardpos_t;
+
+struct Move {
+	boardpos_t oldPos = -1;
+	boardpos_t newPos = -1;
+	boardpos_t jumpPos = -1;
+};
 
 typedef std::bitset<SQUARE_COUNT*BITS_PER_SQUARE> BoardState;
 
@@ -42,6 +48,7 @@ public:
 	void move(boardpos_t pos1, boardpos_t pos2);
 	void setSquareState(boardpos_t index, SquareState state);
 	SquareState getSquareState(boardpos_t index);
+	void kingPiece(boardpos_t pos);
 
 private:
 	BoardState boardState;
