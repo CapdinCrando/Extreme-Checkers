@@ -31,7 +31,7 @@ void GameEngine::executeRedMove(Move move)
 {
 	std::cout << "Executing red move: " << +move.oldPos << "," << +move.jumpPos << "," << +move.newPos << std::endl;
 	this->move(move);
-	emit displayMove(move);
+	emit displayMove(move, this->checkForKing(move.newPos));
 	if(move.jumpPos != BOARD_POS_INVALID)
 	{
 		gameBoard.setSquareState(move.jumpPos, SQUARE_EMPTY);
@@ -80,7 +80,7 @@ void GameEngine::executeBlackMove(Move move)
 {
 	std::cout << "Executing black move: " << +move.oldPos << "," << +move.jumpPos << "," << +move.newPos << std::endl;
 	this->move(move);
-	emit displayMove(move);
+	emit displayMove(move, this->checkForKing(move.newPos));
 	if(move.jumpPos != BOARD_POS_INVALID)
 	{
 		gameBoard.setSquareState(move.jumpPos, SQUARE_EMPTY);
@@ -128,6 +128,16 @@ void GameEngine::executeBlackMove(Move move)
 	{
 		emit blackMoveFinished();
 	}
+}
+
+bool GameEngine::checkForKing(boardpos_t pos)
+{
+	if((pos < 4) || (pos > 27))
+	{
+		gameBoard.kingPiece(pos);
+		return true;
+	}
+	return false;
 }
 
 SquareState GameEngine::getSquareState(boardpos_t index)

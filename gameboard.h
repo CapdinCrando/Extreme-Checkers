@@ -48,6 +48,7 @@ public:
 	void move(boardpos_t pos1, boardpos_t pos2);
 	void setSquareState(boardpos_t index, SquareState state);
 	SquareState getSquareState(boardpos_t index);
+	void kingPiece(boardpos_t pos);
 
 private:
 	BoardState boardState;

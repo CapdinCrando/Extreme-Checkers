@@ -25,7 +25,7 @@ public slots:
 	void drawPossibleMoves(std::vector<Move> moves, SquareState checkerType);
 	void startRedMove(Move move);
 	void blackMoveFinished();
-	void displayMove(Move move);
+	void displayMove(Move move, bool kingPiece);
 
 protected:
 	QSize sizeHint() const override;
@@ -46,12 +46,6 @@ private:
 	GameEngine gameEngine;
 
 	mutable QSize lastSize;
-	QPen redPen;
-	QPen blackPen;
-	QBrush redBrush;
-	QBrush blackBrush;
-
-	QLabel* kingLabel;
 
 	bool acceptingClicks = false;
 };

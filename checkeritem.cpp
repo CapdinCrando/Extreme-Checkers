@@ -33,24 +33,29 @@ CheckerItem::CheckerItem(boardpos_t position, SquareState checkerType)
 		this->setPen(redPen);
 		this->setBrush(redBrush);
 	}
-
-	// Set normal or king
-	if(SQUARE_ISKING(checkerType))
-	{
-		QGraphicsSimpleTextItem* kingLabel = new QGraphicsSimpleTextItem("K");
-		kingLabel->setBrush(whiteBrush);
-		kingLabel->setParentItem(this);
-		QPointF checkerCenter = this->boundingRect().center();
-		QRectF labelBox = kingLabel->boundingRect();
-		kingLabel->setPos(checkerCenter.x() - labelBox.width(), checkerCenter.y() - labelBox.height());
-		kingLabel->setScale(2);
-	}
 }
 
 void CheckerItem::move(boardpos_t newPosition)
 {
 	this->position = newPosition;
 	this->setPos(BOARD_VIEW_X(newPosition), BOARD_VIEW_Y(newPosition));
+}
+
+
+void CheckerItem::king()
+{
+	// Set checker type
+	if(SQUARE_ISBLACK(checkerType)) checkerType = SQUARE_BLACK_KING;
+	else checkerType = SQUARE_RED_KING;
+
+	// Set label
+	QGraphicsSimpleTextItem* kingLabel = new QGraphicsSimpleTextItem("K");
+	kingLabel->setBrush(whiteBrush);
+	kingLabel->setParentItem(this);
+	QPointF checkerCenter = this->boundingRect().center();
+	QRectF labelBox = kingLabel->boundingRect();
+	kingLabel->setPos(checkerCenter.x() - labelBox.width(), checkerCenter.y() - labelBox.height());
+	kingLabel->setScale(2);
 }
 
 void CheckerItem::mousePressEvent(QGraphicsSceneMouseEvent* event)

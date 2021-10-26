@@ -15,14 +15,6 @@ GameView::GameView(QWidget *parent) : QGraphicsView(parent)
 	this->setScene(scene);
 	this->scene->setSceneRect(0, 0, BOARD_VIEW_SIZE, BOARD_VIEW_SIZE);
 
-	redPen = QPen(Qt::red);
-	blackPen = QPen(Qt::black);
-	redBrush = QBrush(Qt::red);
-	blackBrush = QBrush(Qt::black);
-
-	kingLabel = new QLabel();
-	kingLabel->setText("K");
-
 	connect(&gameEngine, &GameEngine::blackMoveFinished, this, &GameView::blackMoveFinished);
 	connect(&gameEngine, &GameEngine::displayMove, this, &GameView::displayMove);
 	connect(&gameEngine, &GameEngine::displayMultiJump, this, &GameView::drawPossibleMoves);
@@ -130,7 +122,7 @@ void GameView::blackMoveFinished()
 	this->acceptingClicks = true;
 }
 
-void GameView::displayMove(Move move)
+void GameView::displayMove(Move move, bool kingPiece)
 {
 	CheckerItem* checker = checkers[move.oldPos];
 	checker->move(move.newPos);
@@ -139,6 +131,7 @@ void GameView::displayMove(Move move)
 	{
 		scene->removeItem(checkers[move.jumpPos]);
 	}
+	if(kingPiece) checker->king();
 }
 
 void GameView::updateBoardSquare(boardpos_t position, SquareState state)

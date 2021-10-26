@@ -31,7 +31,7 @@ public:
 	void executeRedMove(Move move);
 
 signals:
-	void displayMove(Move move);
+	void displayMove(Move move, bool kingPiece);
 	void displayMultiJump(std::vector<Move> moves, SquareState checkerType);
 	void blackMoveFinished();
 
@@ -41,6 +41,7 @@ private slots:
 private:
 	void move(Move move);
 	void executeBlackMove(Move move);
+	bool checkForKing(boardpos_t pos);
 	Move getAIMove();
 	GameBoard gameBoard;
 	bool jumpExists = false;
