@@ -1,11 +1,10 @@
 #include "airandom.h"
 
-AIRandom::AIRandom(QObject *parent) : AI(parent)
+AIMove AIRandom::getMove(BoardState& board)
 {
+	Q_UNUSED(board);
 
-}
-
-AIMove AIRandom::getMove()
-{
 	return AIMove();
 }
+
+

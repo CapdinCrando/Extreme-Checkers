@@ -19,10 +19,4 @@ struct GameSettings
 	unsigned char aiLevel = 0;
 };
 
-const QStringList aiModes = {	"Level 1 - Random AI",
-								"Level 2 - Minimax AI",
-								"Level 3 - Parallel AI",
-								"Level 4 - GPU-Accelerated AI" };
-
-
 #endif // DEFINES_H

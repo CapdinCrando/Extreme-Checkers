@@ -7,8 +7,8 @@ class AIRandom : public AI
 {
 	Q_OBJECT
 public:
-	explicit AIRandom(QObject *parent = nullptr);
-	AIMove getMove() override;
+	explicit AIRandom(QObject *parent = nullptr) : AI(parent) {};
+	AIMove getMove(BoardState& board) override;
 	QString getDescription() override { return description; }
 
 protected:

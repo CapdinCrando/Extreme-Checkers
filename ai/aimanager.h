@@ -2,7 +2,8 @@
 #define AIMANAGER_H
 
 #include <vector>
-#include "airandom.h"
+#include <QStringList>
+#include "ai.h"
 
 class AIManager
 {
@@ -11,7 +12,7 @@ public:
 	~AIManager();
 	static QStringList getDescriptionList();
 	void selectAI(uint8_t index);
-	AIMove getMove();
+	AIMove getMove(BoardState board);
 
 private:
 	static const std::vector<AI*> aiList;

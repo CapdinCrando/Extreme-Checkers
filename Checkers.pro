@@ -9,8 +9,8 @@ CONFIG += c++11
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    ai/ai.cpp \
     ai/aimanager.cpp \
+    ai/aiminimax.cpp \
     ai/airandom.cpp \
     checkeritem.cpp \
     fakecheckeritem.cpp \
@@ -24,6 +24,7 @@ SOURCES += \
 HEADERS += \
     ai/ai.h \
     ai/aimanager.h \
+    ai/aiminimax.h \
     ai/airandom.h \
     checkeritem.h \
     defines.h \
