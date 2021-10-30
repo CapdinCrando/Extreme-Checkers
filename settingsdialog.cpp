@@ -1,5 +1,6 @@
 #include "settingsdialog.h"
 #include "ui_settingsdialog.h"
+#include "ai/aimanager.h"
 
 SettingsDialog::SettingsDialog(QWidget *parent) :
 	QDialog(parent),
@@ -7,7 +8,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
 {
 	ui->setupUi(this);
 
-	ui->aiSelectionBox->addItems(aiModes);
+	ui->aiSelectionBox->addItems(AIManager::getDescriptionList());
 
 	connect(ui->startGameButton, &QPushButton::clicked, this, &SettingsDialog::handleStartGamePress);
 	connect(ui->quitButton, &QPushButton::clicked, this, &SettingsDialog::reject);

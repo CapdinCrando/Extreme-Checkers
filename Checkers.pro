@@ -10,6 +10,7 @@ CONFIG += c++11
 
 SOURCES += \
     ai/ai.cpp \
+    ai/aimanager.cpp \
     ai/airandom.cpp \
     checkeritem.cpp \
     fakecheckeritem.cpp \
@@ -22,6 +23,7 @@ SOURCES += \
 
 HEADERS += \
     ai/ai.h \
+    ai/aimanager.h \
     ai/airandom.h \
     checkeritem.h \
     defines.h \

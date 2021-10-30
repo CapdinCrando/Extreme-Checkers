@@ -25,9 +25,7 @@ class AI : public QObject
 public:
 	explicit AI(QObject *parent = nullptr);
 	virtual AIMove getMove() = 0;
-
-signals:
-
+	virtual QString getDescription() = 0;
 };
 
 #endif // AI_H

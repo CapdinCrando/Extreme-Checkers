@@ -9,6 +9,10 @@ class AIRandom : public AI
 public:
 	explicit AIRandom(QObject *parent = nullptr);
 	AIMove getMove() override;
+	QString getDescription() override { return description; }
+
+protected:
+	const QString description = "Level 1 - Random AI";
 };
 
 #endif // AIRANDOM_H

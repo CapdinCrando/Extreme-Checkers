@@ -4,12 +4,12 @@
 
 GameEngine::GameEngine()
 {
-
+	aiManager = new AIManager();
 }
 
 GameEngine::~GameEngine()
 {
-
+	delete aiManager;
 }
 
 void GameEngine::resetGame()
@@ -23,7 +23,7 @@ void GameEngine::resetGame()
 
 void GameEngine::saveSettings(GameSettings settings)
 {
-	this->settings = settings;
+	aiManager->selectAI(settings.aiLevel);
 	std::cout << "Setting: " << +settings.aiLevel << std::endl;
 }
 

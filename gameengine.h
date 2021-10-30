@@ -4,6 +4,7 @@
 #include <QObject>
 #include "gameboard.h"
 #include "defines.h"
+#include "ai/aimanager.h"
 
 #define BOARD_POS_INVALID -1
 
@@ -50,8 +51,9 @@ private:
 	std::vector<Move> getAllBlackMoves();
 	Move getAIMove();
 
+	AIManager* aiManager;
+
 	GameBoard gameBoard;
-	GameSettings settings;
 	bool jumpExists = false;
 };
 

@@ -1,0 +1,21 @@
+#ifndef AIMANAGER_H
+#define AIMANAGER_H
+
+#include <vector>
+#include "airandom.h"
+
+class AIManager
+{
+
+public:
+	~AIManager();
+	static QStringList getDescriptionList();
+	void selectAI(uint8_t index);
+	AIMove getMove();
+
+private:
+	static const std::vector<AI*> aiList;
+	AI* currentAI = aiList[0];
+};
+
+#endif // AIMANAGER_H
