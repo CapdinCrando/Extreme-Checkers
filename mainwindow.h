@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QMessageBox>
 #include "defines.h"
+#include "settingsdialog.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -23,5 +24,6 @@ public:
 private:
     Ui::MainWindow *ui;
 	QMessageBox* gameOverBox;
+	SettingsDialog* settingsDialog;
 };
 #endif // MAINWINDOW_H

@@ -20,10 +20,7 @@ GameView::GameView(QWidget *parent) : QGraphicsView(parent)
 	connect(&gameEngine, &GameEngine::displayMultiJump, this, &GameView::drawPossibleMoves);
 	connect(&gameEngine, &GameEngine::gameOver, this, &GameView::gameOver);
 
-	resetBoard();
-
 	this->show();
-	acceptingClicks = true;
 }
 
 GameView::~GameView()
@@ -73,6 +70,14 @@ void GameView::mousePressEvent(QMouseEvent *event)
 {
 	if(acceptingClicks) QGraphicsView::mousePressEvent(event);
 	else event->ignore();
+}
+
+void GameView::saveSettings(GameSettings settings)
+{
+	acceptingClicks = false;
+	gameEngine.saveSettings(settings);
+	resetBoard();
+	acceptingClicks = true;
 }
 
 void GameView::clearFakeCheckers()

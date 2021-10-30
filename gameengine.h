@@ -30,6 +30,7 @@ public:
 	std::vector<Move> getRedMoves(boardpos_t pos);
 	SquareState getSquareState(boardpos_t index);
 	void executeRedMove(Move move);
+	void saveSettings(GameSettings settings);
 
 signals:
 	void displayMove(Move move, bool kingPiece);
@@ -48,7 +49,9 @@ private:
 	bool checkIfRedMoveExists();
 	std::vector<Move> getAllBlackMoves();
 	Move getAIMove();
+
 	GameBoard gameBoard;
+	GameSettings settings;
 	bool jumpExists = false;
 };
 

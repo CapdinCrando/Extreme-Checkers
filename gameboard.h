@@ -28,6 +28,12 @@ struct Move {
 	boardpos_t jumpPos = -1;
 };
 
+struct Move2 {
+	boardpos_t oldPos : 5;
+	boardpos_t newPos : 5;
+	boardpos_t jumpPos : 5;
+};
+
 typedef std::bitset<SQUARE_COUNT*BITS_PER_SQUARE> BoardState;
 
 static const SquareState initialGame[SQUARE_COUNT] = {SQUARE_BLACK, SQUARE_BLACK, SQUARE_BLACK, SQUARE_BLACK,

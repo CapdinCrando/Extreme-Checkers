@@ -21,6 +21,12 @@ void GameEngine::resetGame()
 	jumpExists = false;
 }
 
+void GameEngine::saveSettings(GameSettings settings)
+{
+	this->settings = settings;
+	std::cout << "Setting: " << +settings.aiLevel << std::endl;
+}
+
 void GameEngine::move(Move move)
 {
 	gameBoard.move(move.oldPos, move.newPos);
