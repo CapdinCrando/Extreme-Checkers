@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include "gameboard.h"
+#include "defines.h"
 
 enum MoveTypes : unsigned char
 {
@@ -14,20 +15,26 @@ enum MoveTypes : unsigned char
 
 struct AIMove
 {
-	unsigned char newPos : 5;
-	unsigned char oldPos : 5;
-	unsigned char jumpPos : 5;
-	unsigned char jumpType : 3;
+	char newPos : 6;
+	char oldPos : 6;
+	char jumpPos : 6;
+	unsigned char moveType : 2;
 };
 
 typedef uint8_t depth_t;
-typedef int8_t result_t;
+typedef signed char result_t;
 
 enum ResultType : result_t
 {
+	RESULT_TIE = -13,
 	RESULT_RED_WIN = -20,
-	RESULT_TIE = 0,
 	RESULT_BLACK_WIN = 20
+};
+
+struct Result
+{
+	signed char value : 5;
+	result_t type : 3;
 };
 
 class AI : public QObject
@@ -35,7 +42,7 @@ class AI : public QObject
 	Q_OBJECT
 public:
 	explicit AI(QObject *parent = nullptr) : QObject(parent) {};
-	virtual AIMove getMove(BoardState& board) = 0;
+	virtual AIMove getMove(GameBoard& board) = 0;
 	virtual QString getDescription() = 0;
 };
 
