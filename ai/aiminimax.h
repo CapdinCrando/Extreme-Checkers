@@ -20,7 +20,6 @@ protected:
 	const QString description = "Level 2 - Minimax AI";
 
 private:
-	std::vector<Move>* getAllBlackMoves(GameBoard &board);
 	std::vector<Move>* getAllRedMoves(GameBoard &board);
 	std::vector<Move>* getAllBlackJumps(GameBoard &board, boardpos_t pos);
 	std::vector<Move>* getAllRedJumps(GameBoard &board, boardpos_t pos);
