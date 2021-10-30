@@ -10,14 +10,14 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
 	ui->aiSelectionBox->addItems(aiModes);
 
 	connect(ui->startGameButton, &QPushButton::clicked, this, &SettingsDialog::handleStartGamePress);
-	connect(ui->quitButton, &QPushButton::clicked, this, &SettingsDialog::rejected);
+	connect(ui->quitButton, &QPushButton::clicked, this, &SettingsDialog::reject);
 }
 
 void SettingsDialog::handleStartGamePress()
 {
 	GameSettings settings;
 	settings.aiLevel = ui->aiSelectionBox->currentIndex();
-	this->saveSettings(settings);
+	emit this->saveSettings(settings);
 	this->accept();
 }
 
