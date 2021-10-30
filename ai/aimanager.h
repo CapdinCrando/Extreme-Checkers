@@ -12,7 +12,7 @@ public:
 	~AIManager();
 	static QStringList getDescriptionList();
 	void selectAI(uint8_t index);
-	AIMove getMove(BoardState board);
+	Move getMove(GameBoard board);
 
 private:
 	static const std::vector<AI*> aiList;

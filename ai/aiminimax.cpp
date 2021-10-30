@@ -2,99 +2,11 @@
 
 #define NODE_DEPTH 5
 
-std::vector<AIMove>* AIMinimax::getAllBlackMoves(GameBoard &board)
+std::vector<Move>* AIMinimax::getAllRedMoves(GameBoard &board)
 {
-	AIMove m;
-	std::vector<AIMove> *moves = new std::vector<AIMove>;
-	std::vector<AIMove> *jumps = new std::vector<AIMove>;
-	for(uint8_t i = 0; i < SQUARE_COUNT; i++)
-	{
-		SquareState state = board.getSquareState(i);
-		if(SQUARE_ISBLACK(state))
-		{
-			uint8_t cornerMin = 2;
-			if(SQUARE_ISKING(state)) cornerMin = 0;
-			for(uint8_t j = cornerMin; j < 4; j++)
-			{
-				// Get move
-				boardpos_t move = cornerList[i][j];
-				// Check if position is invalid
-				if(move != BOARD_POS_INVALID)
-				{
-					// Check if space is empty
-					SquareState moveState = board.getSquareState(move);
-					if(SQUARE_ISEMPTY(moveState))
-					{
-						// Add move to potential moves
-						m.oldPos = i;
-						m.newPos = move;
-						m.jumpPos = -1;
-						m.moveType = MOVE_MOVE;
-						moves->push_back(m);
-					}
-					else if(!(SQUARE_ISBLACK(moveState)))
-					{
-						// Get jump
-						boardpos_t jump = cornerList[move][j];
-						// Check if position is invalid
-						if(jump != BOARD_POS_INVALID)
-						{
-							// Check if space is empty
-							if(SQUARE_ISEMPTY(board.getSquareState(jump)))
-							{
-								// Add move to potential moves
-								m.oldPos = i;
-								m.newPos = jump;
-								m.jumpPos = move;
-								// Check for multi
-								m.moveType = MOVE_JUMP;
-								for(uint8_t k = cornerMin; k < 4; k++)
-								{
-									boardpos_t moveMulti = cornerList[j][k];
-									// Check if position is invalid
-									if(moveMulti != BOARD_POS_INVALID)
-									{
-										SquareState moveStateMulti = board.getSquareState(moveMulti);
-										if(SQUARE_ISNOTEMPTY(moveStateMulti))
-										{
-											if(!(SQUARE_ISBLACK(moveStateMulti)))
-											{
-												boardpos_t jumpMulti = cornerList[j][k];
-												if(jumpMulti != BOARD_POS_INVALID)
-												{
-													SquareState jumpStateMulti = board.getSquareState(moveMulti);
-													if(SQUARE_ISNOTEMPTY(jumpStateMulti))
-													{
-														m.moveType = MOVE_JUMP_MULTI;
-														break;
-													}
-												}
-											}
-										}
-									}
-								}
-								jumps->push_back(m);
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-	if(jumps->empty())
-	{
-		delete jumps;
-		return moves;
-	}
-	delete moves;
-	return jumps;
-}
-
-std::vector<AIMove>* AIMinimax::getAllRedMoves(GameBoard &board)
-{
-	AIMove m;
-	std::vector<AIMove> *moves = new std::vector<AIMove>;
-	std::vector<AIMove> *jumps = new std::vector<AIMove>;
+	Move m;
+	std::vector<Move> *moves = new std::vector<Move>;
+	std::vector<Move> *jumps = new std::vector<Move>;
 	for(uint8_t i = 0; i < SQUARE_COUNT; i++)
 	{
 		SquareState state = board.getSquareState(i);
@@ -116,7 +28,6 @@ std::vector<AIMove>* AIMinimax::getAllRedMoves(GameBoard &board)
 						// Add move to potential moves
 						m.oldPos = i;
 						m.newPos = move;
-						m.jumpPos = -1;
 						m.moveType = MOVE_MOVE;
 						moves->push_back(m);
 					}
@@ -179,11 +90,11 @@ std::vector<AIMove>* AIMinimax::getAllRedMoves(GameBoard &board)
 	return jumps;
 }
 
-std::vector<AIMove>* AIMinimax::getAllBlackJumps(GameBoard &board, boardpos_t pos)
+std::vector<Move>* AIMinimax::getAllBlackJumps(GameBoard &board, boardpos_t pos)
 {
-	AIMove m;
+	Move m;
 	m.moveType = MOVE_JUMP_MULTI;
-	std::vector<AIMove> *jumps = new std::vector<AIMove>;
+	std::vector<Move> *jumps = new std::vector<Move>;
 	SquareState state = board.getSquareState(pos);
 	uint8_t cornerMax = 2;
 	if(SQUARE_ISKING(state)) cornerMax = 4;
@@ -222,11 +133,11 @@ std::vector<AIMove>* AIMinimax::getAllBlackJumps(GameBoard &board, boardpos_t po
 	return jumps;
 }
 
-std::vector<AIMove>* AIMinimax::getAllRedJumps(GameBoard &board, boardpos_t pos)
+std::vector<Move>* AIMinimax::getAllRedJumps(GameBoard &board, boardpos_t pos)
 {
-	AIMove m;
+	Move m;
 	m.moveType = MOVE_JUMP_MULTI;
-	std::vector<AIMove> *jumps = new std::vector<AIMove>;
+	std::vector<Move> *jumps = new std::vector<Move>;
 	SquareState state = board.getSquareState(pos);
 	uint8_t cornerMin = 2;
 	if(SQUARE_ISKING(state)) cornerMin = 0;
@@ -407,18 +318,18 @@ bool AIMinimax::evalBoardResult(GameBoard &board, result_t& resultOut)
 	return false;
 }
 
-result_t AIMinimax::evalBlackMove(GameBoard board, AIMove& move, depth_t depth)
+result_t AIMinimax::evalBlackMove(GameBoard board, Move& move, depth_t depth)
 {
 	// Execute Move
 	board.move(move.oldPos, move.newPos);
-	if(move.jumpPos != BOARD_POS_INVALID) board.setSquareState(move.jumpPos, SQUARE_EMPTY);
+	if(MOVE_ISJUMP(move)) board.setSquareState(move.jumpPos, SQUARE_EMPTY);
 
 	// Check depth and evaluate
 	result_t result;
 	if(evalBoardResult(board, result)) return result;
 	else if(depth == NODE_DEPTH) return result;
 
-	std::vector<AIMove>* moves;
+	std::vector<Move>* moves;
 	std::vector<result_t> results;
 	size_t a;
 	if(move.moveType == MOVE_JUMP_MULTI)
@@ -452,18 +363,18 @@ result_t AIMinimax::evalBlackMove(GameBoard board, AIMove& move, depth_t depth)
 	return results[a];
 }
 
-result_t AIMinimax::evalRedMove(GameBoard board, AIMove& move, depth_t depth)
+result_t AIMinimax::evalRedMove(GameBoard board, Move& move, depth_t depth)
 {
 	// Execute Move
 	board.move(move.oldPos, move.newPos);
-	if(move.jumpPos != BOARD_POS_INVALID) board.setSquareState(move.jumpPos, SQUARE_EMPTY);
+	if(MOVE_ISJUMP(move)) board.setSquareState(move.jumpPos, SQUARE_EMPTY);
 
 	// Check depth and evaluate
 	result_t result;
 	if(evalBoardResult(board, result)) return result;
 	else if(depth == NODE_DEPTH) return result;
 
-	std::vector<AIMove>* moves;
+	std::vector<Move>* moves;
 	std::vector<result_t> results;
 	size_t a;
 	if(move.moveType == MOVE_JUMP_MULTI)
@@ -497,9 +408,15 @@ result_t AIMinimax::evalRedMove(GameBoard board, AIMove& move, depth_t depth)
 	return results[a];
 }
 
-AIMove AIMinimax::getMove(GameBoard& board)
+Move AIMinimax::getMove(GameBoard& board)
 {
-	std::vector<AIMove>* moves = getAllBlackMoves(board);
+	std::vector<Move>* moves = getAllBlackMoves(board);
+	if(moves->empty())
+	{
+		Move m;
+		m.moveType = MOVE_INVALID;
+		return m;
+	}
 
 	std::vector<result_t> results;
 

@@ -37,7 +37,7 @@ void GameEngine::executeRedMove(Move move)
 	std::cout << "Executing red move: " << +move.oldPos << "," << +move.jumpPos << "," << +move.newPos << std::endl;
 	this->move(move);
 	emit displayMove(move, this->checkForKing(move.newPos));
-	if(move.jumpPos != BOARD_POS_INVALID)
+	if(MOVE_ISJUMP(move))
 	{
 		gameBoard.setSquareState(move.jumpPos, SQUARE_EMPTY);
 		// Check if can jump again
@@ -64,6 +64,7 @@ void GameEngine::executeRedMove(Move move)
 								newJump.oldPos = move.newPos;
 								newJump.newPos = jump;
 								newJump.jumpPos = cornerPiece;
+								newJump.moveType = MOVE_JUMP;
 								newJumps.push_back(newJump);
 							}
 						}
@@ -88,12 +89,12 @@ void GameEngine::executeRedMove(Move move)
 void GameEngine::executeBlackMove()
 {
 	Move move = this->getAIMove();
-	if(move.oldPos == -1) return;
+	if(MOVE_ISINVALID(move)) return;
 
 	std::cout << "Executing black move: " << +move.oldPos << "," << +move.jumpPos << "," << +move.newPos << std::endl;
 	this->move(move);
 	emit displayMove(move, this->checkForKing(move.newPos));
-	if(move.jumpPos != BOARD_POS_INVALID)
+	if(MOVE_ISJUMP(move))
 	{
 		gameBoard.setSquareState(move.jumpPos, SQUARE_EMPTY);
 		// Check if can jump again
@@ -305,6 +306,7 @@ std::vector<Move> GameEngine::getRedMoves(boardpos_t pos)
 									// Add move to potential moves
 									m.newPos = jump;
 									m.jumpPos = move;
+									m.moveType = MOVE_JUMP;
 									testJumps.push_back(m);
 								}
 							}
@@ -314,7 +316,7 @@ std::vector<Move> GameEngine::getRedMoves(boardpos_t pos)
 					{
 						// Add move to potential moves
 						m.newPos = move;
-						m.jumpPos = -1;
+						m.moveType = MOVE_MOVE;
 						testMoves.push_back(m);
 					}
 				}
@@ -326,64 +328,9 @@ std::vector<Move> GameEngine::getRedMoves(boardpos_t pos)
 	return testJumps;
 }
 
-
-std::vector<Move> GameEngine::getAllBlackMoves()
-{
-	Move m;
-	std::vector<Move> moves;
-	std::vector<Move> jumps;
-	for(uint8_t i = 0; i < SQUARE_COUNT; i++)
-	{
-		SquareState state = this->getSquareState(i);
-		if(SQUARE_ISBLACK(state))
-		{
-			uint8_t cornerMin = 2;
-			if(SQUARE_ISKING(state)) cornerMin = 0;
-			for(uint8_t j = cornerMin; j < 4; j++)
-			{
-				// Get move
-				boardpos_t move = cornerList[i][j];
-				// Check if position is invalid
-				if(move != BOARD_POS_INVALID)
-				{
-					// Check if space is empty
-					SquareState moveState = gameBoard.getSquareState(move);
-					if(SQUARE_ISEMPTY(moveState))
-					{
-						// Add move to potential moves
-						m.oldPos = i;
-						m.newPos = move;
-						m.jumpPos = -1;
-						moves.push_back(m);
-					}
-					else if(!(SQUARE_ISBLACK(moveState)))
-					{
-						// Get jump
-						boardpos_t jump = cornerList[move][j];
-						// Check if position is invalid
-						if(jump != BOARD_POS_INVALID)
-						{
-							// Check if space is empty
-							if(SQUARE_ISEMPTY(gameBoard.getSquareState(jump)))
-							{
-								// Add move to potential moves
-								m.oldPos = i;
-								m.newPos = jump;
-								m.jumpPos = move;
-								jumps.push_back(m);
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-	if(jumps.empty()) return moves;
-	return jumps;
-}
-
 Move GameEngine::getAIMove()
 {
+	/*
 	std::vector<Move> moves = getAllBlackMoves();
 	if(moves.empty())
 	{
@@ -391,4 +338,7 @@ Move GameEngine::getAIMove()
 		return Move();
 	}
 	return moves[rand() % moves.size()];
+	*/
+
+	return aiManager->getMove(gameBoard);
 }

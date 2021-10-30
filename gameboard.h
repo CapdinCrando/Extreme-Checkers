@@ -12,6 +12,9 @@
 #define SQUARE_ISEMPTY(state) (state & 0x4) == 0
 #define SQUARE_ISNOTEMPTY(state) state & 0x4
 
+#define MOVE_ISJUMP(move) move.moveType >= MOVE_JUMP
+#define MOVE_ISINVALID(move) move.moveType == MOVE_INVALID
+
 #define BOARD_POS_INVALID -1
 
 enum SquareState : uint8_t {
@@ -24,16 +27,21 @@ enum SquareState : uint8_t {
 
 typedef int8_t boardpos_t;
 
-struct Move {
-	boardpos_t oldPos = -1;
-	boardpos_t newPos = -1;
-	boardpos_t jumpPos = -1;
+typedef unsigned char movetype_t;
+enum MoveTypes : movetype_t
+{
+	MOVE_INVALID = 0,
+	MOVE_MOVE = 1,
+	MOVE_JUMP = 2,
+	MOVE_JUMP_MULTI = 3,
 };
 
-struct Move2 {
-	boardpos_t oldPos : 5;
-	boardpos_t newPos : 5;
-	boardpos_t jumpPos : 5;
+struct Move
+{
+	unsigned char newPos : 5;
+	unsigned char oldPos : 5;
+	unsigned char jumpPos : 5;
+	movetype_t moveType : 2;
 };
 
 typedef std::bitset<SQUARE_COUNT*BITS_PER_SQUARE> BoardState;

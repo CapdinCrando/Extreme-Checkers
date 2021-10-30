@@ -2,7 +2,8 @@
 #include "aiminimax.h"
 #include "airandom.h"
 
-const std::vector<AI*> AIManager::aiList = { new AIRandom() };
+const std::vector<AI*> AIManager::aiList = { new AIRandom(),
+											 new AIMinimax() };
 
 AIManager::~AIManager()
 {
@@ -26,7 +27,7 @@ void AIManager::selectAI(uint8_t index)
 	}
 }
 
-AIMove AIManager::getMove(BoardState board)
+Move AIManager::getMove(GameBoard board)
 {
 	return currentAI->getMove(board);
 }

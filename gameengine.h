@@ -6,8 +6,6 @@
 #include "defines.h"
 #include "ai/aimanager.h"
 
-#define BOARD_POS_INVALID -1
-
 
 
 class GameEngine : public QObject

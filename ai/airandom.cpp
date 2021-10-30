@@ -1,10 +1,12 @@
 #include "airandom.h"
 
-AIMove AIRandom::getMove(BoardState& board)
+Move AIRandom::getMove(GameBoard& board)
 {
-	Q_UNUSED(board);
+	std::vector<Move>* moves = getAllBlackMoves(board);
 
-	return AIMove();
+	Move move = moves->at(rand() % moves->size());
+	delete moves;
+	return move;
 }
 
 
