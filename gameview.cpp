@@ -132,7 +132,7 @@ void GameView::displayMove(Move move, bool kingPiece)
 	checker->move(move.newPos);
 	checkers[move.newPos] = checker;
 	checkers[move.oldPos] = nullptr;
-	if(move.jumpPos != BOARD_POS_INVALID)
+	if(MOVE_ISJUMP(move))
 	{
 		scene->removeItem(checkers[move.jumpPos]);
 		checkers[move.jumpPos] = nullptr;
