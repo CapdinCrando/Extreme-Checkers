@@ -37,7 +37,7 @@ private:
 	void checkRedTie();
 	void checkBlackTie();
 	bool checkIfRedMoveExists();
-	std::vector<Move> getAllBlackMoves();
+	bool canBlackMove();
 	Move getAIMove();
 
 	AIManager* aiManager;

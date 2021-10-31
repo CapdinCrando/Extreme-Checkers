@@ -163,14 +163,13 @@ bool GameEngine::checkRedWin()
 
 void GameEngine::checkRedTie()
 {
-	// TODO: Performance improvement
-	if(getAllBlackMoves().empty())
+	if(canBlackMove())
 	{
-		emit gameOver(GAME_OVER_TIE);
+		emit gameOver(GAME_OVER_BLACK_WIN);
 	}
 	else
 	{
-		emit gameOver(GAME_OVER_BLACK_WIN);
+		emit gameOver(GAME_OVER_TIE);
 	}
 }
 
@@ -300,11 +299,8 @@ std::vector<Move> GameEngine::getRedMoves(boardpos_t pos)
 	return testJumps;
 }
 
-std::vector<Move> GameEngine::getAllBlackMoves()
+bool GameEngine::canBlackMove()
 {
-	Move m;
-	std::vector<Move> moves;
-	std::vector<Move> jumps;
 	for(uint8_t i = 0; i < SQUARE_COUNT; i++)
 	{
 		SquareState state = this->getSquareState(i);
@@ -324,10 +320,7 @@ std::vector<Move> GameEngine::getAllBlackMoves()
 					if(SQUARE_ISEMPTY(moveState))
 					{
 						// Add move to potential moves
-						m.oldPos = i;
-						m.newPos = move;
-						m.moveType = MOVE_MOVE;
-						moves.push_back(m);
+						return true;
 					}
 					else if(!(SQUARE_ISBLACK(moveState)))
 					{
@@ -340,11 +333,7 @@ std::vector<Move> GameEngine::getAllBlackMoves()
 							if(SQUARE_ISEMPTY(gameBoard.getSquareState(jump)))
 							{
 								// Add move to potential moves
-								m.oldPos = i;
-								m.newPos = jump;
-								m.jumpPos = move;
-								m.moveType = MOVE_JUMP;
-								jumps.push_back(m);
+								return true;
 							}
 						}
 					}
@@ -352,8 +341,7 @@ std::vector<Move> GameEngine::getAllBlackMoves()
 			}
 		}
 	}
-	if(jumps.empty()) return moves;
-	return jumps;
+	return false;
 }
 
 Move GameEngine::getAIMove()
