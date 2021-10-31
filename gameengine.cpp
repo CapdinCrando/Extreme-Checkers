@@ -96,36 +96,7 @@ void GameEngine::executeBlackMove()
 	emit displayMove(move, this->checkForKing(move.newPos));
 	if(MOVE_ISJUMP(move))
 	{
-		gameBoard.setSquareState(move.jumpPos, SQUARE_EMPTY);
-		// Check if can jump again
-		bool canJumpAgain = false;
-		for(uint8_t i = 0; i < 4; i++)
-		{
-			// Get move
-			boardpos_t cornerPiece = cornerList[move.newPos][i];
-
-			// Check if position is invalid
-			if(cornerPiece != BOARD_POS_INVALID)
-			{
-				SquareState cornerState = gameBoard.getSquareState(cornerPiece);
-				if(SQUARE_ISNOTEMPTY(cornerState))
-				{
-					if(!(SQUARE_ISBLACK(cornerState)))
-					{
-						boardpos_t jump = cornerList[cornerPiece][i];
-						if(jump != BOARD_POS_INVALID)
-						{
-							if(SQUARE_ISEMPTY(gameBoard.getSquareState(jump)))
-							{
-								canJumpAgain = true;
-								break;
-							}
-						}
-					}
-				}
-			}
-		}
-		if(canJumpAgain)
+		if(move.moveType == MOVE_JUMP_MULTI)
 		{
 			executeBlackMove();
 		}
