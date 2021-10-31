@@ -96,6 +96,7 @@ void GameEngine::executeBlackMove()
 	emit displayMove(move, this->checkForKing(move.newPos));
 	if(MOVE_ISJUMP(move))
 	{
+		gameBoard.setSquareState(move.jumpPos, SQUARE_EMPTY);
 		if(move.moveType == MOVE_JUMP_MULTI)
 		{
 			executeBlackMove();
