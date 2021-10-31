@@ -2,9 +2,14 @@
 
 Move AIRandom::getMove(GameBoard& board)
 {
-	std::vector<Move>* moves = getAllBlackMoves(board);
+	Move move;
 
-	Move move = moves->at(rand() % moves->size());
+	std::vector<Move>* moves = getAllBlackMoves(board);
+	if(!moves->empty())
+	{
+		move = moves->at(rand() % moves->size());
+	}
+
 	delete moves;
 	return move;
 }
