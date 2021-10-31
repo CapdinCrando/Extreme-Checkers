@@ -358,15 +358,6 @@ std::vector<Move> GameEngine::getAllBlackMoves()
 
 Move GameEngine::getAIMove()
 {
-	/*
-	std::vector<Move> moves = getAllBlackMoves();
-	if(moves.empty())
-	{
-		checkBlackTie();
-		return Move();
-	}
-	return moves[rand() % moves.size()];
-	*/
 	Move move = aiManager->getMove(gameBoard);
 	if(MOVE_ISINVALID(move))
 	{
