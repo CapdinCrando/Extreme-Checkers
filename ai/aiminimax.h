@@ -14,10 +14,7 @@ class AIMinimax : public AI
 public:
 	explicit AIMinimax(QObject *parent = nullptr) : AI(parent) {};
 	Move getMove(GameBoard& board) override;
-	QString getDescription() override { return description; }
-
-protected:
-	const QString description = "Level 2 - Minimax AI";
+	QString getDescription() override { return "Level 2 - Minimax AI"; }
 
 private:
 	std::vector<Move>* getAllRedMoves(GameBoard &board);
