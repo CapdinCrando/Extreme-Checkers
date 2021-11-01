@@ -4,12 +4,12 @@
 
 GameEngine::GameEngine()
 {
-
+	aiManager = new AIManager();
 }
 
 GameEngine::~GameEngine()
 {
-
+	delete aiManager;
 }
 
 void GameEngine::resetGame()
@@ -19,6 +19,12 @@ void GameEngine::resetGame()
 		gameBoard.setSquareState(i, initialGame[i]);
 	}
 	jumpExists = false;
+}
+
+void GameEngine::saveSettings(GameSettings settings)
+{
+	aiManager->selectAI(settings.aiLevel);
+	std::cout << "Setting: " << +settings.aiLevel << std::endl;
 }
 
 void GameEngine::move(Move move)
@@ -31,7 +37,7 @@ void GameEngine::executeRedMove(Move move)
 	std::cout << "Executing red move: " << +move.oldPos << "," << +move.jumpPos << "," << +move.newPos << std::endl;
 	this->move(move);
 	emit displayMove(move, this->checkForKing(move.newPos));
-	if(move.jumpPos != BOARD_POS_INVALID)
+	if(MOVE_ISJUMP(move))
 	{
 		gameBoard.setSquareState(move.jumpPos, SQUARE_EMPTY);
 		// Check if can jump again
@@ -58,6 +64,7 @@ void GameEngine::executeRedMove(Move move)
 								newJump.oldPos = move.newPos;
 								newJump.newPos = jump;
 								newJump.jumpPos = cornerPiece;
+								newJump.moveType = MOVE_JUMP;
 								newJumps.push_back(newJump);
 							}
 						}
@@ -82,43 +89,15 @@ void GameEngine::executeRedMove(Move move)
 void GameEngine::executeBlackMove()
 {
 	Move move = this->getAIMove();
-	if(move.oldPos == -1) return;
+	if(MOVE_ISINVALID(move)) return;
 
 	std::cout << "Executing black move: " << +move.oldPos << "," << +move.jumpPos << "," << +move.newPos << std::endl;
 	this->move(move);
 	emit displayMove(move, this->checkForKing(move.newPos));
-	if(move.jumpPos != BOARD_POS_INVALID)
+	if(MOVE_ISJUMP(move))
 	{
 		gameBoard.setSquareState(move.jumpPos, SQUARE_EMPTY);
-		// Check if can jump again
-		bool canJumpAgain = false;
-		for(uint8_t i = 0; i < 4; i++)
-		{
-			// Get move
-			boardpos_t cornerPiece = cornerList[move.newPos][i];
-
-			// Check if position is invalid
-			if(cornerPiece != BOARD_POS_INVALID)
-			{
-				SquareState cornerState = gameBoard.getSquareState(cornerPiece);
-				if(SQUARE_ISNOTEMPTY(cornerState))
-				{
-					if(!(SQUARE_ISBLACK(cornerState)))
-					{
-						boardpos_t jump = cornerList[cornerPiece][i];
-						if(jump != BOARD_POS_INVALID)
-						{
-							if(SQUARE_ISEMPTY(gameBoard.getSquareState(jump)))
-							{
-								canJumpAgain = true;
-								break;
-							}
-						}
-					}
-				}
-			}
-		}
-		if(canJumpAgain)
+		if(move.moveType == MOVE_JUMP_MULTI)
 		{
 			executeBlackMove();
 		}
@@ -184,14 +163,13 @@ bool GameEngine::checkRedWin()
 
 void GameEngine::checkRedTie()
 {
-	// TODO: Performance improvement
-	if(getAllBlackMoves().empty())
+	if(canBlackMove())
 	{
-		emit gameOver(GAME_OVER_TIE);
+		emit gameOver(GAME_OVER_BLACK_WIN);
 	}
 	else
 	{
-		emit gameOver(GAME_OVER_BLACK_WIN);
+		emit gameOver(GAME_OVER_TIE);
 	}
 }
 
@@ -299,6 +277,7 @@ std::vector<Move> GameEngine::getRedMoves(boardpos_t pos)
 									// Add move to potential moves
 									m.newPos = jump;
 									m.jumpPos = move;
+									m.moveType = MOVE_JUMP;
 									testJumps.push_back(m);
 								}
 							}
@@ -308,7 +287,7 @@ std::vector<Move> GameEngine::getRedMoves(boardpos_t pos)
 					{
 						// Add move to potential moves
 						m.newPos = move;
-						m.jumpPos = -1;
+						m.moveType = MOVE_MOVE;
 						testMoves.push_back(m);
 					}
 				}
@@ -320,12 +299,8 @@ std::vector<Move> GameEngine::getRedMoves(boardpos_t pos)
 	return testJumps;
 }
 
-
-std::vector<Move> GameEngine::getAllBlackMoves()
+bool GameEngine::canBlackMove()
 {
-	Move m;
-	std::vector<Move> moves;
-	std::vector<Move> jumps;
 	for(uint8_t i = 0; i < SQUARE_COUNT; i++)
 	{
 		SquareState state = this->getSquareState(i);
@@ -345,10 +320,7 @@ std::vector<Move> GameEngine::getAllBlackMoves()
 					if(SQUARE_ISEMPTY(moveState))
 					{
 						// Add move to potential moves
-						m.oldPos = i;
-						m.newPos = move;
-						m.jumpPos = -1;
-						moves.push_back(m);
+						return true;
 					}
 					else if(!(SQUARE_ISBLACK(moveState)))
 					{
@@ -361,10 +333,7 @@ std::vector<Move> GameEngine::getAllBlackMoves()
 							if(SQUARE_ISEMPTY(gameBoard.getSquareState(jump)))
 							{
 								// Add move to potential moves
-								m.oldPos = i;
-								m.newPos = jump;
-								m.jumpPos = move;
-								jumps.push_back(m);
+								return true;
 							}
 						}
 					}
@@ -372,17 +341,16 @@ std::vector<Move> GameEngine::getAllBlackMoves()
 			}
 		}
 	}
-	if(jumps.empty()) return moves;
-	return jumps;
+	return false;
 }
 
 Move GameEngine::getAIMove()
 {
-	std::vector<Move> moves = getAllBlackMoves();
-	if(moves.empty())
+	Move move = aiManager->getMove(gameBoard);
+	if(MOVE_ISINVALID(move))
 	{
 		checkBlackTie();
 		return Move();
 	}
-	return moves[rand() % moves.size()];
+	return move;
 }

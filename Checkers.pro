@@ -9,25 +9,36 @@ CONFIG += c++11
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    ai/ai.cpp \
+    ai/aimanager.cpp \
+    ai/aiminimax.cpp \
+    ai/airandom.cpp \
     checkeritem.cpp \
     fakecheckeritem.cpp \
     gameboard.cpp \
     gameengine.cpp \
     gameview.cpp \
     main.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    settingsdialog.cpp
 
 HEADERS += \
+    ai/ai.h \
+    ai/aimanager.h \
+    ai/aiminimax.h \
+    ai/airandom.h \
     checkeritem.h \
     defines.h \
     fakecheckeritem.h \
     gameboard.h \
     gameengine.h \
     gameview.h \
-    mainwindow.h
+    mainwindow.h \
+    settingsdialog.h
 
 FORMS += \
-    mainwindow.ui
+    mainwindow.ui \
+    settingsdialog.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

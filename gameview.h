@@ -30,6 +30,7 @@ public slots:
 	void blackMoveFinished();
 	void displayMove(Move move, bool kingPiece);
 	void resetBoard();
+	void saveSettings(GameSettings settings);
 
 protected:
 	QSize sizeHint() const override;
