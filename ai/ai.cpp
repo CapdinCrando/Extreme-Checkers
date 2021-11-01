@@ -95,27 +95,25 @@ std::vector<Move>* AI::getAllBlackJumps(GameBoard &board, boardpos_t pos)
 	Move m;
 	std::vector<Move> *jumps = new std::vector<Move>;
 	SquareState state = board.getSquareState(pos);
-	uint8_t cornerMin = 2;
-	if(SQUARE_ISKING(state)) cornerMin = 0;
-	for(uint8_t j = cornerMin; j < 4; j++)
+	if(SQUARE_ISNOTEMPTY(state))
 	{
-		// Get move
-		boardpos_t move = cornerList[pos][j];
-		// Check if position is invalid
-		if(move != BOARD_POS_INVALID)
+		for(uint8_t j = 0; j < 4; j++)
 		{
-			// Check if space is empty
-			SquareState moveState = board.getSquareState(move);
-			if(SQUARE_ISEMPTY(moveState))
+			// Get move
+			boardpos_t move = cornerList[pos][j];
+			// Check if position is invalid
+			if(move != BOARD_POS_INVALID)
 			{
-				if(!(SQUARE_ISBLACK(moveState)))
+				// Check if space is empty
+				SquareState moveState = board.getSquareState(move);
+				if(SQUARE_ISNOTEMPTY(moveState))
 				{
-					// Get jump
-					boardpos_t jump = cornerList[move][j];
-					// Check if position is invalid
-					if(jump != BOARD_POS_INVALID)
+					if(!(SQUARE_ISBLACK(moveState)))
 					{
-						if(jump != pos)
+						// Get jump
+						boardpos_t jump = cornerList[move][j];
+						// Check if position is invalid
+						if(jump != BOARD_POS_INVALID)
 						{
 							// Check if space is empty
 							if(SQUARE_ISEMPTY(board.getSquareState(jump)))

@@ -25,7 +25,7 @@ Move AIRandom::getMove(GameBoard& board)
 
 	if(move.moveType == MOVE_JUMP_MULTI)
 	{
-		previousMultiJumpPos = move.oldPos;
+		previousMultiJumpPos = move.newPos;
 	}
 	else previousMultiJumpPos = -1;
 
