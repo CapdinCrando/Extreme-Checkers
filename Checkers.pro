@@ -12,6 +12,7 @@ SOURCES += \
     ai/ai.cpp \
     ai/aimanager.cpp \
     ai/aiminimax.cpp \
+    ai/aiparallel.cpp \
     ai/airandom.cpp \
     checkeritem.cpp \
     fakecheckeritem.cpp \
@@ -26,6 +27,7 @@ HEADERS += \
     ai/ai.h \
     ai/aimanager.h \
     ai/aiminimax.h \
+    ai/aiparallel.h \
     ai/airandom.h \
     checkeritem.h \
     defines.h \

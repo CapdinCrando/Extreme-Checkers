@@ -1,9 +1,11 @@
 #include "aimanager.h"
-#include "aiminimax.h"
 #include "airandom.h"
+#include "aiminimax.h"
+#include "aiparallel.h"
 
 const std::vector<AI*> AIManager::aiList = { new AIRandom(),
-											 new AIMinimax() };
+											 new AIMinimax(),
+											 new AIParallel() };
 
 AIManager::~AIManager()
 {
