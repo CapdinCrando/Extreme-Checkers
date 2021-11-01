@@ -45,25 +45,28 @@ std::vector<Move>* AI::getAllBlackMoves(GameBoard &board)
 								m.jumpPos = move;
 								// Check for multi
 								m.moveType = MOVE_JUMP;
-								for(uint8_t k = cornerMin; k < 4; k++)
+								for(uint8_t k = 0; k < 4; k++)
 								{
-									boardpos_t moveMulti = cornerList[j][k];
+									boardpos_t moveMulti = cornerList[jump][k];
 									// Check if position is invalid
 									if(moveMulti != BOARD_POS_INVALID)
 									{
-										SquareState moveStateMulti = board.getSquareState(moveMulti);
-										if(SQUARE_ISNOTEMPTY(moveStateMulti))
+										if(moveMulti != move)
 										{
-											if(!(SQUARE_ISBLACK(moveStateMulti)))
+											SquareState moveStateMulti = board.getSquareState(moveMulti);
+											if(SQUARE_ISNOTEMPTY(moveStateMulti))
 											{
-												boardpos_t jumpMulti = cornerList[j][k];
-												if(jumpMulti != BOARD_POS_INVALID)
+												if(!(SQUARE_ISBLACK(moveStateMulti)))
 												{
-													SquareState jumpStateMulti = board.getSquareState(moveMulti);
-													if(SQUARE_ISNOTEMPTY(jumpStateMulti))
+													boardpos_t jumpMulti = cornerList[moveMulti][k];
+													if(jumpMulti != BOARD_POS_INVALID)
 													{
-														m.moveType = MOVE_JUMP_MULTI;
-														break;
+														SquareState jumpStateMulti = board.getSquareState(jumpMulti);
+														if(SQUARE_ISEMPTY(jumpStateMulti))
+														{
+															m.moveType = MOVE_JUMP_MULTI;
+															break;
+														}
 													}
 												}
 											}
@@ -84,5 +87,81 @@ std::vector<Move>* AI::getAllBlackMoves(GameBoard &board)
 		return moves;
 	}
 	delete moves;
+	return jumps;
+}
+
+std::vector<Move>* AI::getAllBlackJumps(GameBoard &board, boardpos_t pos)
+{
+	Move m;
+	std::vector<Move> *jumps = new std::vector<Move>;
+	SquareState state = board.getSquareState(pos);
+	uint8_t cornerMax = 2;
+	if(SQUARE_ISKING(state)) cornerMax = 4;
+	for(uint8_t j = 0; j < cornerMax; j++)
+	{
+		// Get move
+		boardpos_t move = cornerList[pos][j];
+		// Check if position is invalid
+		if(move != BOARD_POS_INVALID)
+		{
+			// Check if space is empty
+			SquareState moveState = board.getSquareState(move);
+			if(SQUARE_ISEMPTY(moveState))
+			{
+				if(!(SQUARE_ISBLACK(moveState)))
+				{
+					// Get jump
+					boardpos_t jump = cornerList[move][j];
+					// Check if position is invalid
+					if(jump != BOARD_POS_INVALID)
+					{
+						if(jump != pos)
+						{
+							// Check if space is empty
+							if(SQUARE_ISEMPTY(board.getSquareState(jump)))
+							{
+								// Add move to potential moves
+								m.oldPos = pos;
+								m.newPos = jump;
+								m.jumpPos = move;
+
+								// Check for multi
+								m.moveType = MOVE_JUMP;
+								for(uint8_t k = 0; k < 4; k++)
+								{
+									boardpos_t moveMulti = cornerList[move][k];
+									// Check if position is invalid
+									if(moveMulti != BOARD_POS_INVALID)
+									{
+										if(moveMulti != move)
+										{
+											SquareState moveStateMulti = board.getSquareState(moveMulti);
+											if(SQUARE_ISNOTEMPTY(moveStateMulti))
+											{
+												if(!(SQUARE_ISBLACK(moveStateMulti)))
+												{
+													boardpos_t jumpMulti = cornerList[moveMulti][k];
+													if(jumpMulti != BOARD_POS_INVALID)
+													{
+														SquareState jumpStateMulti = board.getSquareState(jumpMulti);
+														if(SQUARE_ISNOTEMPTY(jumpStateMulti))
+														{
+															m.moveType = MOVE_JUMP_MULTI;
+															break;
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+								jumps->push_back(m);
+							}
+						}
+					}
+				}
+			}
+		}
+	}
 	return jumps;
 }

@@ -31,6 +31,8 @@ public:
 
 protected:
 	std::vector<Move>* getAllBlackMoves(GameBoard &board);
+	std::vector<Move>* getAllBlackJumps(GameBoard &board, boardpos_t pos);
+	boardpos_t previousMultiJumpPos = -1;
 };
 
 #endif // AI_H
