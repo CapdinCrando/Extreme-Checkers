@@ -3,10 +3,7 @@
 
 #include "ai.h"
 
-struct MoveTreeNode
-{
-	std::vector<MoveTreeNode*> children;
-};
+#define NODE_DEPTH 6
 
 class AIMinimax : public AI
 {

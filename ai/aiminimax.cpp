@@ -1,7 +1,5 @@
 #include "aiminimax.h"
 
-#define NODE_DEPTH 5
-
 std::vector<Move>* AIMinimax::getAllRedMoves(GameBoard &board)
 {
 	Move m;
@@ -326,11 +324,15 @@ result_t AIMinimax::evalBlackMove(GameBoard board, Move& move, depth_t depth)
 	{
 		// Create moves
 		moves = getAllBlackJumps(board, move.newPos);
+		if(moves->empty())
+		{
+			moves = getAllBlackMoves(board);
+		}
 
 		// Evaluate Moves (recursive)
 		for(uint8_t i = 0; i < moves->size(); i++)
 		{
-			results.push_back(evalBlackMove(board, moves->at(i), depth++));
+			results.push_back(evalBlackMove(board, moves->at(i), depth + 1));
 		}
 		// Pick max result
 		auto iterator = std::max_element(std::begin(results), std::end(results));
@@ -344,7 +346,7 @@ result_t AIMinimax::evalBlackMove(GameBoard board, Move& move, depth_t depth)
 		// Evaluate Moves (recursive)
 		for(uint8_t i = 0; i < moves->size(); i++)
 		{
-			results.push_back(evalRedMove(board, moves->at(i), depth++));
+			results.push_back(evalRedMove(board, moves->at(i), depth + 1));
 		}
 		// Pick min result
 		auto iterator = std::min_element(std::begin(results), std::end(results));
@@ -371,11 +373,15 @@ result_t AIMinimax::evalRedMove(GameBoard board, Move& move, depth_t depth)
 	{
 		// Create moves
 		moves = getAllRedJumps(board, move.newPos);
+		if(moves->empty())
+		{
+			moves = getAllRedMoves(board);
+		}
 
 		// Evaluate Moves (recursive)
 		for(uint8_t i = 0; i < moves->size(); i++)
 		{
-			results.push_back(evalRedMove(board, moves->at(i), depth++));
+			results.push_back(evalRedMove(board, moves->at(i), depth + 1));
 		}
 		// Pick min result
 		auto iterator = std::min_element(std::begin(results), std::end(results));
@@ -389,7 +395,7 @@ result_t AIMinimax::evalRedMove(GameBoard board, Move& move, depth_t depth)
 		// Evaluate Moves (recursive)
 		for(uint8_t i = 0; i < moves->size(); i++)
 		{
-			results.push_back(evalBlackMove(board, moves->at(i), depth++));
+			results.push_back(evalBlackMove(board, moves->at(i), depth + 1));
 		}
 		// Pick max result
 		auto iterator = std::max_element(std::begin(results), std::end(results));
@@ -400,7 +406,20 @@ result_t AIMinimax::evalRedMove(GameBoard board, Move& move, depth_t depth)
 
 Move AIMinimax::getMove(GameBoard& board)
 {
-	std::vector<Move>* moves = getAllBlackMoves(board);
+	std::vector<Move>* moves;
+	if(previousMultiJumpPos == BOARD_POS_INVALID)
+	{
+		moves = getAllBlackMoves(board);
+	}
+	else
+	{
+		moves = getAllBlackJumps(board, previousMultiJumpPos);
+		if(moves->empty())
+		{
+			moves = getAllBlackMoves(board);
+		}
+	}
+
 	if(moves->empty())
 	{
 		Move m;
@@ -418,5 +437,14 @@ Move AIMinimax::getMove(GameBoard& board)
 	// Pick result
 	auto iterator = std::max_element(std::begin(results), std::end(results));
 	size_t a = std::distance(results.begin(), iterator);
-	return moves->at(a);
+	Move move = moves->at(a);
+
+	// Check for multijump
+	if(move.moveType == MOVE_JUMP_MULTI)
+	{
+		previousMultiJumpPos = move.newPos;
+	}
+	else previousMultiJumpPos = -1;
+
+	return move;
 }
