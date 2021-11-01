@@ -95,9 +95,9 @@ std::vector<Move>* AI::getAllBlackJumps(GameBoard &board, boardpos_t pos)
 	Move m;
 	std::vector<Move> *jumps = new std::vector<Move>;
 	SquareState state = board.getSquareState(pos);
-	uint8_t cornerMax = 2;
-	if(SQUARE_ISKING(state)) cornerMax = 4;
-	for(uint8_t j = 0; j < cornerMax; j++)
+	uint8_t cornerMin = 2;
+	if(SQUARE_ISKING(state)) cornerMin = 0;
+	for(uint8_t j = cornerMin; j < 4; j++)
 	{
 		// Get move
 		boardpos_t move = cornerList[pos][j];
@@ -144,7 +144,7 @@ std::vector<Move>* AI::getAllBlackJumps(GameBoard &board, boardpos_t pos)
 													if(jumpMulti != BOARD_POS_INVALID)
 													{
 														SquareState jumpStateMulti = board.getSquareState(jumpMulti);
-														if(SQUARE_ISNOTEMPTY(jumpStateMulti))
+														if(SQUARE_ISEMPTY(jumpStateMulti))
 														{
 															m.moveType = MOVE_JUMP_MULTI;
 															break;
