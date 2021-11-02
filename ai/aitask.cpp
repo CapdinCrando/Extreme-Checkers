@@ -36,7 +36,7 @@ void AITask::run()
 			for(uint8_t i = 0; i < moves->size(); i++)
 			{
 				Node* newNode = new Node;
-				node->isBlack = true;
+				newNode->isBlack = true;
 				node->children.push_back(newNode);
 				QThreadPool::globalInstance()->start(new AITask(board, moves->at(i), depth + 1, newNode));
 			}
@@ -50,7 +50,7 @@ void AITask::run()
 			for(uint8_t i = 0; i < moves->size(); i++)
 			{
 				Node* newNode = new Node;
-				node->isBlack = false;
+				newNode->isBlack = false;
 				node->children.push_back(newNode);
 				QThreadPool::globalInstance()->start(new AITask(board, moves->at(i), depth + 1, newNode));
 			}
@@ -71,7 +71,7 @@ void AITask::run()
 			for(uint8_t i = 0; i < moves->size(); i++)
 			{
 				Node* newNode = new Node;
-				node->isBlack = false;
+				newNode->isBlack = false;
 				node->children.push_back(newNode);
 				QThreadPool::globalInstance()->start(new AITask(board, moves->at(i), depth + 1, newNode));
 			}
@@ -85,7 +85,7 @@ void AITask::run()
 			for(uint8_t i = 0; i < moves->size(); i++)
 			{
 				Node* newNode = new Node;
-				node->isBlack = true;
+				newNode->isBlack = true;
 				node->children.push_back(newNode);
 				QThreadPool::globalInstance()->start(new AITask(board, moves->at(i), depth + 1, newNode));
 			}
