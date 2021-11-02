@@ -1,6 +1,8 @@
 #include "gameengine.h"
 
+#ifdef QT_DEBUG
 #include <iostream>
+#endif
 
 GameEngine::GameEngine()
 {
@@ -24,7 +26,9 @@ void GameEngine::resetGame()
 void GameEngine::saveSettings(GameSettings settings)
 {
 	aiManager->selectAI(settings.aiLevel);
+#ifdef QT_DEBUG
 	std::cout << "Setting: " << +settings.aiLevel << std::endl;
+#endif
 }
 
 void GameEngine::move(Move move)
@@ -34,7 +38,9 @@ void GameEngine::move(Move move)
 
 void GameEngine::executeRedMove(Move move)
 {
+#ifdef QT_DEBUG
 	std::cout << "Executing red move: " << +move.oldPos << "," << +move.jumpPos << "," << +move.newPos << std::endl;
+#endif
 	this->move(move);
 
 	// Check for king
@@ -98,7 +104,9 @@ void GameEngine::executeBlackMove()
 	Move move = this->getAIMove();
 	if(MOVE_ISINVALID(move)) return;
 
+#ifdef QT_DEBUG
 	std::cout << "Executing black move: " << +move.oldPos << "," << +move.jumpPos << "," << +move.newPos << std::endl;
+#endif
 	this->move(move);
 
 	// Check for king

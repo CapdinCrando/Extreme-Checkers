@@ -3,6 +3,11 @@
 #include "aiminimax.h"
 #include "aiparallel.h"
 
+#ifdef QT_DEBUG
+#include <iostream>
+#include <chrono>
+#endif
+
 const std::vector<AI*> AIManager::aiList = { new AIRandom(),
 											 new AIMinimax(),
 											 new AIParallel() };
@@ -31,6 +36,15 @@ void AIManager::selectAI(uint8_t index)
 
 Move AIManager::getMove(GameBoard board)
 {
+#ifdef QT_DEBUG
+	auto start = std::chrono::high_resolution_clock::now();
+	Move move = currentAI->getMove(board);
+	auto stop = std::chrono::high_resolution_clock::now();
+	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+	std::cout << "Black move calculated in " << duration.count() << " us" << std::endl;
+	return move;
+#else
 	return currentAI->getMove(board);
+#endif
 }
 
