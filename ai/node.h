@@ -5,7 +5,8 @@
 
 struct Node
 {
-	result_t result;
+	result_t result : 7;
+	bool isBlack : 1;
 	std::vector<Node*> children;
 };
 
