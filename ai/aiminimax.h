@@ -3,8 +3,6 @@
 
 #include "ai.h"
 
-#define NODE_DEPTH 6
-
 class AIMinimax : public AI
 {
 	Q_OBJECT

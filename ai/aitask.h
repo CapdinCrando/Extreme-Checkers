@@ -7,10 +7,6 @@
 #include "node.h"
 #include "gameboard.h"
 
-#define NODE_DEPTH 6
-
-#define NODE_DEPTH_CHECK NODE_DEPTH-1
-
 class AITask : public QRunnable
 {
 public:

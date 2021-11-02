@@ -17,7 +17,7 @@ AIParallel::~AIParallel()
 result_t minimax(depth_t depth, Node* node, result_t alpha, result_t beta)
 {
 	if(node->children.empty()) return node->result;
-	if(depth == NODE_DEPTH) return node->result;
+	if(depth == NODE_DEPTH_PARALLEL) return node->result;
 
 	if(node->isBlack)
 	{

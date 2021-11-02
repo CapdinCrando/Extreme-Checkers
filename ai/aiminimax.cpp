@@ -16,7 +16,7 @@ result_t AIMinimax::evalBlackMove(GameBoard board, Move& move, depth_t depth)
 	// Check depth and evaluate
 	result_t result;
 	if(AIUtility::evalBoardResult(board, result)) return result;
-	else if(depth == NODE_DEPTH) return result;
+	else if(depth == NODE_DEPTH_MINIMAX) return result;
 
 	std::vector<Move>* moves;
 	std::vector<result_t> results;
@@ -71,7 +71,7 @@ result_t AIMinimax::evalRedMove(GameBoard board, Move& move, depth_t depth)
 	// Check depth and evaluate
 	result_t result;
 	if(AIUtility::evalBoardResult(board, result)) return result;
-	else if(depth == NODE_DEPTH) return result;
+	else if(depth == NODE_DEPTH_MINIMAX) return result;
 
 	std::vector<Move>* moves;
 	std::vector<result_t> results;

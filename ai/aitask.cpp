@@ -14,7 +14,7 @@ void AITask::run()
 		node->result = result;
 		return;
 	}
-	else if(depth == NODE_DEPTH)
+	else if(depth == NODE_DEPTH_PARALLEL)
 	{
 		node->result = result;
 		return;
