@@ -36,7 +36,14 @@ void GameEngine::executeRedMove(Move move)
 {
 	std::cout << "Executing red move: " << +move.oldPos << "," << +move.jumpPos << "," << +move.newPos << std::endl;
 	this->move(move);
-	emit displayMove(move, this->checkForKing(move.newPos));
+
+	// Check for king
+	if(move.newPos < 4)
+	{
+		emit displayMove(move, gameBoard.kingPiece(move.newPos));
+	}
+	else emit displayMove(move, false);
+
 	if(MOVE_ISJUMP(move))
 	{
 		gameBoard.setSquareState(move.jumpPos, SQUARE_EMPTY);
@@ -93,7 +100,14 @@ void GameEngine::executeBlackMove()
 
 	std::cout << "Executing black move: " << +move.oldPos << "," << +move.jumpPos << "," << +move.newPos << std::endl;
 	this->move(move);
-	emit displayMove(move, this->checkForKing(move.newPos));
+
+	// Check for king
+	if(move.newPos > 27)
+	{
+		emit displayMove(move, gameBoard.kingPiece(move.newPos));
+	}
+	else emit displayMove(move, false);
+
 	if(MOVE_ISJUMP(move))
 	{
 		gameBoard.setSquareState(move.jumpPos, SQUARE_EMPTY);
@@ -117,16 +131,6 @@ void GameEngine::executeBlackMove()
 		emit gameOver(GAME_OVER_BLACK_WIN);
 		return;
 	}
-}
-
-bool GameEngine::checkForKing(boardpos_t pos)
-{
-	if((pos < 4) || (pos > 27))
-	{
-		gameBoard.kingPiece(pos);
-		return true;
-	}
-	return false;
 }
 
 bool GameEngine::checkBlackWin()

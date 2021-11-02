@@ -41,7 +41,6 @@ void CheckerItem::move(boardpos_t newPosition)
 	this->setPos(BOARD_VIEW_X(newPosition), BOARD_VIEW_Y(newPosition));
 }
 
-
 void CheckerItem::king()
 {
 	// Set checker type

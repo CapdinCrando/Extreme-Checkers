@@ -31,7 +31,6 @@ signals:
 private:
 	void move(Move move);
 	void executeBlackMove();
-	bool checkForKing(boardpos_t pos);
 	bool checkRedWin();
 	bool checkBlackWin();
 	void checkRedTie();
