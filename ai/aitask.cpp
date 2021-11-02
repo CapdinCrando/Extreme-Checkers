@@ -21,7 +21,6 @@ void AITask::run()
 	}
 
 	std::vector<Move>* moves;
-	std::vector<result_t> results;
 	if(node->isBlack)
 	{
 		if(move.moveType == MOVE_JUMP_MULTI)
