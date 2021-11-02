@@ -30,6 +30,7 @@ public:
 	AIQueue();
 	void push(Node* n);
 	Node* pop();
+	bool isEmpty();
 
 private:
 	std::mutex mutex;

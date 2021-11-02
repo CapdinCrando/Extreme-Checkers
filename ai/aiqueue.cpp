@@ -20,3 +20,11 @@ Node* AIQueue::pop()
 	mutex.unlock();
 	return n;
 }
+
+bool AIQueue::isEmpty()
+{
+	mutex.lock();
+	bool isEmpty = std::queue<Node*>::empty();
+	mutex.unlock();
+	return isEmpty;
+}
