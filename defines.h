@@ -36,7 +36,6 @@ struct Move
 	unsigned char oldPos : 5;
 	unsigned char jumpPos : 5;
 	movetype_t moveType : 2;
-	unsigned char isBlack : 1;
 };
 
 typedef signed char result_t;

@@ -3,16 +3,10 @@
 
 #include "defines.h"
 
-struct Node{};
-
-struct NodeLink : Node
-{
-	std::vector<Node*> children;
-};
-
-struct NodeEnd : Node
+struct Node
 {
 	result_t result;
+	std::vector<Node*> children;
 };
 
 #endif // NODE_H

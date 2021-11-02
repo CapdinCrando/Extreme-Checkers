@@ -14,8 +14,6 @@
 
 #define MOVE_ISJUMP(move) move.moveType >= MOVE_JUMP
 #define MOVE_ISINVALID(move) move.moveType == MOVE_INVALID
-#define MOVE_ISRED(move) move.isBlack == 0
-#define MOVE_ISBLACK(move) move.isBlack == 1
 
 #define BOARD_POS_INVALID -1
 
