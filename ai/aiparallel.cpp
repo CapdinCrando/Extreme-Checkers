@@ -1,5 +1,15 @@
 #include "aiparallel.h"
 
+AIParallel::AIParallel(QObject *parent) : AI(parent)
+{
+	jobQueue = new moodycamel::BlockingConcurrentQueue<Node*>();
+}
+
+AIParallel::~AIParallel()
+{
+	delete jobQueue;
+}
+
 std::vector<Move>* AIParallel::getAllRedMoves(GameBoard &board)
 {
 	Move m;
@@ -406,6 +416,9 @@ result_t AIParallel::evalRedMove(GameBoard board, Move& move, depth_t depth)
 
 Move AIParallel::getMove(GameBoard& board)
 {
+
+
+
 	std::vector<Move>* moves;
 	if(previousMultiJumpPos == BOARD_POS_INVALID)
 	{
