@@ -10,11 +10,12 @@ QMAKE_CXXFLAGS += -O3
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    ai/ai.cpp \
     ai/aimanager.cpp \
     ai/aiminimax.cpp \
     ai/aiparallel.cpp \
     ai/airandom.cpp \
+    ai/aitask.cpp \
+    ai/aiutility.cpp \
     checkeritem.cpp \
     fakecheckeritem.cpp \
     gameboard.cpp \
@@ -30,9 +31,9 @@ HEADERS += \
     ai/aiminimax.h \
     ai/aiparallel.h \
     ai/airandom.h \
-    ai/queue/blockingconcurrentqueue.h \
-    ai/queue/concurrentqueue.h \
-    ai/queue/lightweightsemaphore.h \
+    ai/aitask.h \
+    ai/aiutility.h \
+    ai/node.h \
     checkeritem.h \
     defines.h \
     fakecheckeritem.h \

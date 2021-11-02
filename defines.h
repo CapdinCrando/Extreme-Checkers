@@ -20,6 +20,7 @@ struct GameSettings
 };
 
 typedef signed char result_t;
+typedef unsigned char depth_t;
 
 typedef unsigned char movetype_t;
 enum MoveTypes : movetype_t

@@ -5,8 +5,6 @@
 #include "gameboard.h"
 #include "defines.h"
 
-typedef uint8_t depth_t;
-
 enum ResultType : result_t
 {
 	RESULT_TIE = -13,
@@ -29,8 +27,6 @@ public:
 	virtual QString getDescription() = 0;
 
 protected:
-	std::vector<Move>* getAllBlackMoves(GameBoard &board);
-	std::vector<Move>* getAllBlackJumps(GameBoard &board, boardpos_t pos);
 	boardpos_t previousMultiJumpPos = -1;
 };
 

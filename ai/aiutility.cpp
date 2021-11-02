@@ -1,6 +1,6 @@
-#include "ai.h"
+#include "aiutility.h"
 
-std::vector<Move>* AI::getAllBlackMoves(GameBoard &board)
+std::vector<Move>* AIUtility::getAllBlackMoves(GameBoard &board)
 {
 	Move m;
 	std::vector<Move> *moves = new std::vector<Move>;
@@ -90,7 +90,7 @@ std::vector<Move>* AI::getAllBlackMoves(GameBoard &board)
 	return jumps;
 }
 
-std::vector<Move>* AI::getAllBlackJumps(GameBoard &board, boardpos_t pos)
+std::vector<Move>* AIUtility::getAllBlackJumps(GameBoard &board, boardpos_t pos)
 {
 	Move m;
 	std::vector<Move> *jumps = new std::vector<Move>;
