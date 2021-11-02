@@ -23,6 +23,12 @@ void AITask::run()
 	std::vector<Move>* moves;
 	if(node->isBlack)
 	{
+		// Check for king
+		if(move.newPos > 27)
+		{
+			board.kingPiece(move.newPos);
+		}
+
 		if(move.moveType == MOVE_JUMP_MULTI)
 		{
 			// Create moves
@@ -58,6 +64,12 @@ void AITask::run()
 	}
 	else
 	{
+		// Check for king
+		if(move.newPos < 4)
+		{
+			board.kingPiece(move.newPos);
+		}
+
 		if(move.moveType == MOVE_JUMP_MULTI)
 		{
 			// Create moves
