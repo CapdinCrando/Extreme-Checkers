@@ -22,7 +22,7 @@ void AITask::run()
 
 	std::vector<Move>* moves;
 	std::vector<result_t> results;
-	if(isBlack)
+	if(node->isBlack)
 	{
 		if(move.moveType == MOVE_JUMP_MULTI)
 		{
@@ -37,8 +37,9 @@ void AITask::run()
 			for(uint8_t i = 0; i < moves->size(); i++)
 			{
 				Node* newNode = new Node;
+				node->isBlack = true;
 				node->children.push_back(newNode);
-				QThreadPool::globalInstance()->start(new AITask(board, moves->at(i), depth + 1, newNode, true));
+				QThreadPool::globalInstance()->start(new AITask(board, moves->at(i), depth + 1, newNode));
 			}
 		}
 		else
@@ -50,8 +51,9 @@ void AITask::run()
 			for(uint8_t i = 0; i < moves->size(); i++)
 			{
 				Node* newNode = new Node;
+				node->isBlack = false;
 				node->children.push_back(newNode);
-				QThreadPool::globalInstance()->start(new AITask(board, moves->at(i), depth + 1, newNode, false));
+				QThreadPool::globalInstance()->start(new AITask(board, moves->at(i), depth + 1, newNode));
 			}
 		}
 	}
@@ -70,8 +72,9 @@ void AITask::run()
 			for(uint8_t i = 0; i < moves->size(); i++)
 			{
 				Node* newNode = new Node;
+				node->isBlack = false;
 				node->children.push_back(newNode);
-				QThreadPool::globalInstance()->start(new AITask(board, moves->at(i), depth + 1, newNode, false));
+				QThreadPool::globalInstance()->start(new AITask(board, moves->at(i), depth + 1, newNode));
 			}
 		}
 		else
@@ -83,8 +86,9 @@ void AITask::run()
 			for(uint8_t i = 0; i < moves->size(); i++)
 			{
 				Node* newNode = new Node;
+				node->isBlack = true;
 				node->children.push_back(newNode);
-				QThreadPool::globalInstance()->start(new AITask(board, moves->at(i), depth + 1, newNode, true));
+				QThreadPool::globalInstance()->start(new AITask(board, moves->at(i), depth + 1, newNode));
 			}
 		}
 	}

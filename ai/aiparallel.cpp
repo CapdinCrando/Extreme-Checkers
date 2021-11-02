@@ -4,12 +4,12 @@
 
 AIParallel::AIParallel(QObject *parent) : AI(parent)
 {
-	threadPool = new QThreadPool();
+
 }
 
 AIParallel::~AIParallel()
 {
-	delete threadPool;
+
 }
 
 Move AIParallel::getMove(GameBoard& board)

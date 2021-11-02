@@ -14,8 +14,8 @@
 class AITask : public QRunnable
 {
 public:
-	AITask(GameBoard& board, Move& move, depth_t depth, Node* node, bool isBlack) :
-		board(board), move(move), depth(depth), node(node), isBlack(isBlack) {};
+	AITask(GameBoard& board, Move& move, depth_t depth, Node* node) :
+		board(board), move(move), depth(depth), node(node) {};
 	void run() override;
 
 private:
@@ -23,7 +23,6 @@ private:
 	Move move;
 	depth_t depth;
 	Node* node;
-	bool isBlack;
 };
 
 #endif // AITASK_H
