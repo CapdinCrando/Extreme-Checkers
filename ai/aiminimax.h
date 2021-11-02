@@ -5,9 +5,7 @@
 
 class AIMinimax : public AI
 {
-	Q_OBJECT
 public:
-	explicit AIMinimax(QObject *parent = nullptr) : AI(parent) {};
 	Move getMove(GameBoard& board) override;
 	QString getDescription() override { return "Level 2 - Minimax AI"; }
 

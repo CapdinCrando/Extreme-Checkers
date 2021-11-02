@@ -4,16 +4,6 @@
 
 #include <algorithm>
 
-AIParallel::AIParallel(QObject *parent) : AI(parent)
-{
-
-}
-
-AIParallel::~AIParallel()
-{
-
-}
-
 result_t minimax(depth_t depth, Node* node, result_t alpha, result_t beta)
 {
 	if(node->children.empty()) return node->result;
