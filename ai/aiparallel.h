@@ -23,6 +23,8 @@ public:
 
 private:
 	QThreadPool* threadPool;
+	void executeBlackMove(GameBoard board, Move& move, depth_t depth);
+	void executeRedMove(GameBoard board, Move& move, depth_t depth);
 };
 
 #endif // AIPARALLEL_H

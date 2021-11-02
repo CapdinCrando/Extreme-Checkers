@@ -19,7 +19,6 @@ struct GameSettings
 	unsigned char aiLevel = 0;
 };
 
-typedef signed char result_t;
 typedef unsigned char depth_t;
 
 typedef unsigned char movetype_t;
@@ -38,6 +37,14 @@ struct Move
 	unsigned char jumpPos : 5;
 	movetype_t moveType : 2;
 	unsigned char isBlack : 1;
+};
+
+typedef signed char result_t;
+enum ResultType : result_t
+{
+	RESULT_TIE = -13,
+	RESULT_RED_WIN = -20,
+	RESULT_BLACK_WIN = 20
 };
 
 #endif // DEFINES_H

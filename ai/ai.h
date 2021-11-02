@@ -5,13 +5,6 @@
 #include "gameboard.h"
 #include "defines.h"
 
-enum ResultType : result_t
-{
-	RESULT_TIE = -13,
-	RESULT_RED_WIN = -20,
-	RESULT_BLACK_WIN = 20
-};
-
 struct Result
 {
 	signed char value : 5;
