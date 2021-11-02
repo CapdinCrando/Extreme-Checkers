@@ -41,9 +41,9 @@ struct Move
 typedef signed char result_t;
 enum ResultType : result_t
 {
-	RESULT_TIE = -13,
-	RESULT_RED_WIN = -20,
-	RESULT_BLACK_WIN = 20
+	RESULT_TIE = 0,
+	RESULT_RED_WIN = -24,
+	RESULT_BLACK_WIN = 24
 };
 
 #endif // DEFINES_H
