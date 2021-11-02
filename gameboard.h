@@ -14,6 +14,8 @@
 
 #define MOVE_ISJUMP(move) move.moveType >= MOVE_JUMP
 #define MOVE_ISINVALID(move) move.moveType == MOVE_INVALID
+#define MOVE_ISRED(move) move.isBlack == 0
+#define MOVE_ISBLACK(move) move.isBlack == 1
 
 #define BOARD_POS_INVALID -1
 
@@ -26,23 +28,6 @@ enum SquareState : uint8_t {
 };
 
 typedef int8_t boardpos_t;
-
-typedef unsigned char movetype_t;
-enum MoveTypes : movetype_t
-{
-	MOVE_INVALID = 0,
-	MOVE_MOVE = 1,
-	MOVE_JUMP = 2,
-	MOVE_JUMP_MULTI = 3,
-};
-
-struct Move
-{
-	unsigned char newPos : 5;
-	unsigned char oldPos : 5;
-	unsigned char jumpPos : 5;
-	movetype_t moveType : 2;
-};
 
 typedef std::bitset<SQUARE_COUNT*BITS_PER_SQUARE> BoardState;
 

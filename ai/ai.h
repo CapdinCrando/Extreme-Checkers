@@ -6,7 +6,6 @@
 #include "defines.h"
 
 typedef uint8_t depth_t;
-typedef signed char result_t;
 
 enum ResultType : result_t
 {

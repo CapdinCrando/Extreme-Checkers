@@ -5,17 +5,31 @@
 #include <queue>
 #include <mutex>
 
+#include "defines.h"
+#include "gameboard.h"
+
 struct Node
 {
-	uint8_t data;
+	Move m;
+	GameBoard board;
 };
 
-class AIQueue : protected std::queue<Node>
+struct NodeLink : Node
+{
+	std::vector<Node*> children;
+};
+
+struct NodeEnd : Node
+{
+	result_t result;
+};
+
+class AIQueue : protected std::queue<Node*>
 {
 public:
 	AIQueue();
-	void push(Node n);
-	Node pop();
+	void push(Node* n);
+	Node* pop();
 
 private:
 	std::mutex mutex;
