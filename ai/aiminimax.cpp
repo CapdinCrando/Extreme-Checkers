@@ -7,6 +7,12 @@ result_t AIMinimax::evalBlackMove(GameBoard board, Move& move, depth_t depth)
 	board.move(move.oldPos, move.newPos);
 	if(MOVE_ISJUMP(move)) board.setSquareState(move.jumpPos, SQUARE_EMPTY);
 
+	// Check for king
+	if(move.newPos > 27)
+	{
+		board.kingPiece(move.newPos);
+	}
+
 	// Check depth and evaluate
 	result_t result;
 	if(AIUtility::evalBoardResult(board, result)) return result;
@@ -55,6 +61,12 @@ result_t AIMinimax::evalRedMove(GameBoard board, Move& move, depth_t depth)
 	// Execute Move
 	board.move(move.oldPos, move.newPos);
 	if(MOVE_ISJUMP(move)) board.setSquareState(move.jumpPos, SQUARE_EMPTY);
+
+	// Check for king
+	if(move.newPos < 4)
+	{
+		board.kingPiece(move.newPos);
+	}
 
 	// Check depth and evaluate
 	result_t result;
