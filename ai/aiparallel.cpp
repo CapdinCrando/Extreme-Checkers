@@ -88,6 +88,12 @@ Move AIParallel::getMove(GameBoard& board)
 		if(beta <= alpha) break;
 	}
 
+	// Free memory
+	for(uint8_t i = 0; i < children.size(); i++)
+	{
+		delete children.at(i);
+	}
+
 	// Pick result
 	auto iterator = std::max_element(std::begin(results), std::end(results));
 	size_t a = std::distance(results.begin(), iterator);

@@ -23,6 +23,7 @@ SOURCES += \
     ai/airandom.cpp \
     ai/aitask.cpp \
     ai/aiutility.cpp \
+    ai/node.cpp \
     checkeritem.cpp \
     fakecheckeritem.cpp \
     gameboard.cpp \

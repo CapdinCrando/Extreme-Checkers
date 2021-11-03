@@ -3,11 +3,14 @@
 
 #include "defines.h"
 
-struct Node
+class Node
 {
+public:
 	result_t result : 7;
 	bool isBlack : 1;
 	std::vector<Node*> children;
+
+	~Node();
 };
 
 #endif // NODE_H
