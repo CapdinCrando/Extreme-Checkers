@@ -38,11 +38,13 @@ SquareState GameBoard::getSquareState(boardpos_t index)
 	return static_cast<SquareState>((boardState[offset]) | (boardState[offset+1] << 1) | (boardState[offset+2] << 2));
 }
 
-void GameBoard::kingPiece(boardpos_t pos)
+bool GameBoard::kingPiece(boardpos_t pos)
 {
 	boardpos_t offset = pos*BITS_PER_SQUARE;
 	if(boardState[offset + 2] != 0)
 	{
 		boardState[offset] = 1;
+		return true;
 	}
+	return false;
 }

@@ -27,23 +27,6 @@ enum SquareState : uint8_t {
 
 typedef int8_t boardpos_t;
 
-typedef unsigned char movetype_t;
-enum MoveTypes : movetype_t
-{
-	MOVE_INVALID = 0,
-	MOVE_MOVE = 1,
-	MOVE_JUMP = 2,
-	MOVE_JUMP_MULTI = 3,
-};
-
-struct Move
-{
-	unsigned char newPos : 5;
-	unsigned char oldPos : 5;
-	unsigned char jumpPos : 5;
-	movetype_t moveType : 2;
-};
-
 typedef std::bitset<SQUARE_COUNT*BITS_PER_SQUARE> BoardState;
 
 static const SquareState initialGame[SQUARE_COUNT] = {SQUARE_BLACK, SQUARE_BLACK, SQUARE_BLACK, SQUARE_BLACK,
@@ -75,7 +58,7 @@ public:
 	void move(boardpos_t pos1, boardpos_t pos2);
 	void setSquareState(boardpos_t index, SquareState state);
 	SquareState getSquareState(boardpos_t index);
-	void kingPiece(boardpos_t pos);
+	bool kingPiece(boardpos_t pos);
 
 private:
 	BoardState boardState;

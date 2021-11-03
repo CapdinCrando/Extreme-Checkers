@@ -1,6 +1,8 @@
 #include "gameengine.h"
 
+#ifdef QT_DEBUG
 #include <iostream>
+#endif
 
 GameEngine::GameEngine()
 {
@@ -24,7 +26,9 @@ void GameEngine::resetGame()
 void GameEngine::saveSettings(GameSettings settings)
 {
 	aiManager->selectAI(settings.aiLevel);
+#ifdef QT_DEBUG
 	std::cout << "Setting: " << +settings.aiLevel << std::endl;
+#endif
 }
 
 void GameEngine::move(Move move)
@@ -34,9 +38,18 @@ void GameEngine::move(Move move)
 
 void GameEngine::executeRedMove(Move move)
 {
+#ifdef QT_DEBUG
 	std::cout << "Executing red move: " << +move.oldPos << "," << +move.jumpPos << "," << +move.newPos << std::endl;
+#endif
 	this->move(move);
-	emit displayMove(move, this->checkForKing(move.newPos));
+
+	// Check for king
+	if(move.newPos < 4)
+	{
+		emit displayMove(move, gameBoard.kingPiece(move.newPos));
+	}
+	else emit displayMove(move, false);
+
 	if(MOVE_ISJUMP(move))
 	{
 		gameBoard.setSquareState(move.jumpPos, SQUARE_EMPTY);
@@ -91,9 +104,18 @@ void GameEngine::executeBlackMove()
 	Move move = this->getAIMove();
 	if(MOVE_ISINVALID(move)) return;
 
+#ifdef QT_DEBUG
 	std::cout << "Executing black move: " << +move.oldPos << "," << +move.jumpPos << "," << +move.newPos << std::endl;
+#endif
 	this->move(move);
-	emit displayMove(move, this->checkForKing(move.newPos));
+
+	// Check for king
+	if(move.newPos > 27)
+	{
+		emit displayMove(move, gameBoard.kingPiece(move.newPos));
+	}
+	else emit displayMove(move, false);
+
 	if(MOVE_ISJUMP(move))
 	{
 		gameBoard.setSquareState(move.jumpPos, SQUARE_EMPTY);
@@ -117,16 +139,6 @@ void GameEngine::executeBlackMove()
 		emit gameOver(GAME_OVER_BLACK_WIN);
 		return;
 	}
-}
-
-bool GameEngine::checkForKing(boardpos_t pos)
-{
-	if((pos < 4) || (pos > 27))
-	{
-		gameBoard.kingPiece(pos);
-		return true;
-	}
-	return false;
 }
 
 bool GameEngine::checkBlackWin()

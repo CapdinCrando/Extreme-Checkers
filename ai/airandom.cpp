@@ -1,18 +1,19 @@
 #include "airandom.h"
+#include "aiutility.h"
 
 Move AIRandom::getMove(GameBoard& board)
 {
 	std::vector<Move>* moves;
 	if(previousMultiJumpPos == BOARD_POS_INVALID)
 	{
-		moves = getAllBlackMoves(board);
+		moves = AIUtility::getAllBlackMoves(board);
 	}
 	else
 	{
-		moves = getAllBlackJumps(board, previousMultiJumpPos);
+		moves = AIUtility::getAllBlackJumps(board, previousMultiJumpPos);
 		if(moves->empty())
 		{
-			moves = getAllBlackMoves(board);
+			moves = AIUtility::getAllBlackMoves(board);
 		}
 	}
 
