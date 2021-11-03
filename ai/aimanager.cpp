@@ -2,6 +2,7 @@
 #include "airandom.h"
 #include "aiminimax.h"
 #include "aiparallel.h"
+#include "aigpu.h"
 
 #ifdef QT_DEBUG
 #include <iostream>
@@ -10,12 +11,12 @@
 
 const std::vector<AI*> AIManager::aiList = { new AIRandom(),
 											 new AIMinimax(),
-											 new AIParallel() };
+											 new AIParallel(),
+											 new AIGPU() };
 
 AIManager::~AIManager()
 {
 	for(uint8_t i = 0; i < aiList.size(); i++) delete aiList[i];
-	aiList.empty();
 }
 
 QStringList AIManager::getDescriptionList()
