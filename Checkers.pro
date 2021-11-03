@@ -12,6 +12,8 @@ QMAKE_CXXFLAGS_RELEASE -= -Os
 # add the desired -O3 if not present
 QMAKE_CXXFLAGS_RELEASE *= -O3
 
+DEFINES += CUDA_EDIT
+
 # You can make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
@@ -44,6 +46,7 @@ HEADERS += \
     ai/airandom.h \
     ai/aitask.h \
     ai/aiutility.h \
+	ai/gpuutility.h \
     ai/node.h \
     checkeritem.h \
     defines.h \

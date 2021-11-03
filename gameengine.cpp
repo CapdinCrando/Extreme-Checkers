@@ -1,4 +1,5 @@
 #include "gameengine.h"
+#include "ai/gpuutility.h"
 
 #ifdef QT_DEBUG
 #include <iostream>
@@ -7,6 +8,7 @@
 GameEngine::GameEngine()
 {
 	aiManager = new AIManager();
+	testPrint();
 }
 
 GameEngine::~GameEngine()
