@@ -5,6 +5,10 @@
 #include "aigpu.h"
 
 #ifdef QT_DEBUG
+#define PROFILING
+#endif
+
+#ifdef PROFILING
 #include <iostream>
 #include <chrono>
 #endif
@@ -37,7 +41,7 @@ void AIManager::selectAI(uint8_t index)
 
 Move AIManager::getMove(GameBoard board)
 {
-#ifdef QT_DEBUG
+#ifdef PROFILING
 	auto start = std::chrono::high_resolution_clock::now();
 	Move move = currentAI->getMove(board);
 	auto stop = std::chrono::high_resolution_clock::now();
