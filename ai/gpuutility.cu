@@ -117,29 +117,46 @@ __global__ void getAllBlackMovesKernel(Move* moveList, boardstate_t* board)
 std::vector<Move>* GPUUtility::getAllBlackMoves(BoardState* board)
 {
 	Move* moves_dev;
-	cudaMalloc(&moves_dev, 4*12*sizeof(Move));
-	cudaMemset(&moves_dev, 0, 4*12*sizeof(Move));
+	cudaMalloc(&moves_dev, 4*32*sizeof(Move));
+	cudaMemset(&moves_dev, 0, 4*32*sizeof(Move));
 
 	boardstate_t* board_dev;
 	cudaMalloc(&board_dev, sizeof(BoardState));
 	cudaMemcpy(board_dev, board, sizeof(BoardState), cudaMemcpyHostToDevice);
 
 	getAllBlackMovesKernel CUDA_KERNEL(1,32) (moves_dev, board_dev);
+	cudaDeviceSynchronize();
 
-	Move* moves_host = new Move[12*4];
-	cudaMemcpy(moves_host, moves_dev, 12*4*sizeof(Move), cudaMemcpyDeviceToHost);
+	Move* moves_host = new Move[32*4];
+	cudaMemcpy(moves_host, moves_dev, 32*4*sizeof(Move), cudaMemcpyDeviceToHost);
+	cudaFree(moves_dev);
+	cudaFree(board_dev);
 
 	std::vector<Move>* moves = new std::vector<Move>;
-	for(uint8_t i = 0; i < 12*4; i++)
+	std::vector<Move>* jumps = new std::vector<Move>;
+	for(uint8_t i = 0; i < 32*4; i++)
 	{
 		Move m = moves_host[i];
 		if(m.moveType != MOVE_INVALID)
 		{
-			moves->push_back(m);
+			if(MOVE_ISJUMP(m))
+			{
+				jumps->push_back(m);
+			}
+			else moves->push_back(m);
+			std::cout << "Adding: " << +m.oldPos << "," << +m.jumpPos << "," << +m.newPos << "," << +m.moveType << std::endl;
 		}
 	}
-	return moves;
+	delete[] moves_host;
+	if(jumps->empty())
+	{
+		delete jumps;
+		return moves;
+	}
+	delete moves;
+	return jumps;
 }
+
 void GPUUtility::testPrint()
 {
 	printKernel CUDA_KERNEL(1,8) ();
