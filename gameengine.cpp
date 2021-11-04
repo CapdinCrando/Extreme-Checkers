@@ -8,7 +8,6 @@
 GameEngine::GameEngine()
 {
 	aiManager = new AIManager();
-	testPrint();
 }
 
 GameEngine::~GameEngine()

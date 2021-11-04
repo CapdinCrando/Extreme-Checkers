@@ -2,7 +2,6 @@
 #define DEFINES_H
 
 #include <cinttypes>
-#include <QStringList>
 #include <vector>
 
 #define NODE_DEPTH_MINIMAX 6

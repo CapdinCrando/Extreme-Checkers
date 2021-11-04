@@ -3,6 +3,7 @@
 
 #include "gameboard.h"
 #include "defines.h"
+#include <QStringList>
 
 class AI
 {

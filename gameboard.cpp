@@ -12,6 +12,11 @@ GameBoard::~GameBoard()
 
 }
 
+BoardState GameBoard::getBoardState()
+{
+	return boardState;
+}
+
 void GameBoard::move(boardpos_t pos1, boardpos_t pos2)
 {
 	boardpos_t offset1 = pos1*BITS_PER_SQUARE;

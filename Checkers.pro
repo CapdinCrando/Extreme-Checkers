@@ -3,14 +3,6 @@ QT       += core gui
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++11
-# remove possible other optimization flags
-QMAKE_CXXFLAGS_RELEASE -= -O
-QMAKE_CXXFLAGS_RELEASE -= -O1
-QMAKE_CXXFLAGS_RELEASE -= -O2
-QMAKE_CXXFLAGS_RELEASE -= -Os
-
-# add the desired -O3 if not present
-QMAKE_CXXFLAGS_RELEASE *= -O3
 
 DEFINES += CUDA_EDIT
 

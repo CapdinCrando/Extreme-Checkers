@@ -5,7 +5,7 @@
 #include <bitset>
 
 #define SQUARE_COUNT 32
-#define BITS_PER_SQUARE 3
+#define BITS_PER_SQUARE 4
 
 #define SQUARE_ISKING(state) state & 0x1
 #define SQUARE_ISBLACK(state) state & 0x2
@@ -17,7 +17,8 @@
 
 #define BOARD_POS_INVALID -1
 
-enum SquareState : uint8_t {
+typedef uint8_t boardstate_t;
+enum SquareState : boardstate_t {
 	SQUARE_EMPTY = 0,
 	SQUARE_RED = 4,
 	SQUARE_RED_KING = 5,
@@ -55,6 +56,7 @@ public:
 	GameBoard();
 	~GameBoard();
 
+	BoardState getBoardState();
 	void move(boardpos_t pos1, boardpos_t pos2);
 	void setSquareState(boardpos_t index, SquareState state);
 	SquareState getSquareState(boardpos_t index);
