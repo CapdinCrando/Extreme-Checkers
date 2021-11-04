@@ -4,6 +4,8 @@
 #define CUDA_KERNEL(...) <<<__VA_ARGS__>>>
 #endif
 
+#define GET_BOARD_STATE_KERNEL(board, pos) (board[pos/2] >> (pos%2)*4) & 0x7
+
 #include "gpuutility.h"
 
 #include <cuda_runtime.h>
@@ -30,11 +32,6 @@ __global__ void printKernel()
 	printf("Hello from mykernel\n");
 }
 
-__device__ boardstate_t getBoardStateKernel(boardstate_t* board, boardpos_t pos)
-{
-	return (board[pos/2] >> (pos%2)*4) & 0x7;
-}
-
 __global__ void getAllBlackMovesKernel(Move* moveList, boardstate_t* board)
 {
 	unsigned int i = threadIdx.x;
@@ -43,7 +40,7 @@ __global__ void getAllBlackMovesKernel(Move* moveList, boardstate_t* board)
 
 	Move m;
 	m.oldPos = i;
-	boardstate_t state = getBoardStateKernel(board, i);
+	boardstate_t state = GET_BOARD_STATE_KERNEL(board, i);
 	if(SQUARE_ISBLACK(state))
 	{
 		uint8_t cornerMin = 2;
@@ -56,7 +53,7 @@ __global__ void getAllBlackMovesKernel(Move* moveList, boardstate_t* board)
 			if(move != BOARD_POS_INVALID)
 			{
 				// Check if space is empty
-				boardstate_t moveState = getBoardStateKernel(board, move);
+				boardstate_t moveState = GET_BOARD_STATE_KERNEL(board, move);
 				if(SQUARE_ISEMPTY(moveState))
 				{
 					// Add move to potential moves
@@ -73,7 +70,7 @@ __global__ void getAllBlackMovesKernel(Move* moveList, boardstate_t* board)
 					if(jump != BOARD_POS_INVALID)
 					{
 						// Check if space is empty
-						if(SQUARE_ISEMPTY(getBoardStateKernel(board, jump)))
+						if(SQUARE_ISEMPTY(GET_BOARD_STATE_KERNEL(board, jump)))
 						{
 							// Add move to potential moves
 							m.newPos = jump;
@@ -88,7 +85,7 @@ __global__ void getAllBlackMovesKernel(Move* moveList, boardstate_t* board)
 								{
 									if(moveMulti != move)
 									{
-										boardstate_t moveStateMulti = getBoardStateKernel(board, moveMulti);
+										boardstate_t moveStateMulti = GET_BOARD_STATE_KERNEL(board, moveMulti);
 										if(SQUARE_ISNOTEMPTY(moveStateMulti))
 										{
 											if(!(SQUARE_ISBLACK(moveStateMulti)))
@@ -96,7 +93,7 @@ __global__ void getAllBlackMovesKernel(Move* moveList, boardstate_t* board)
 												boardpos_t jumpMulti = cornerListDev[moveMulti][k];
 												if(jumpMulti != BOARD_POS_INVALID)
 												{
-													boardstate_t jumpStateMulti = getBoardStateKernel(board, jumpMulti);
+													boardstate_t jumpStateMulti = GET_BOARD_STATE_KERNEL(board, jumpMulti);
 													if(SQUARE_ISEMPTY(jumpStateMulti))
 													{
 														m.moveType = MOVE_JUMP_MULTI;
