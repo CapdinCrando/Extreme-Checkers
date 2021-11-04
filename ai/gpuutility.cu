@@ -144,7 +144,6 @@ std::vector<Move>* GPUUtility::getAllBlackMoves(BoardState* board)
 				jumps->push_back(m);
 			}
 			else moves->push_back(m);
-			std::cout << "Adding: " << +m.oldPos << "," << +m.jumpPos << "," << +m.newPos << "," << +m.moveType << std::endl;
 		}
 	}
 	delete[] moves_host;

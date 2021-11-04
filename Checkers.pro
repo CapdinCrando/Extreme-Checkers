@@ -6,6 +6,8 @@ CONFIG += c++11
 
 DEFINES += CUDA_EDIT
 
+QMAKE_CXXFLAGS_RELEASE += /Ox
+
 # You can make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
@@ -132,7 +134,7 @@ else {
 	cuda.commands = $$CUDA_DIR/bin/nvcc.exe $$NVCC_OPTIONS $$CUDA_INC $$LIBS \
 					--machine $$SYSTEM_TYPE -arch=$$CUDA_ARCH \
 					--compile -cudart static -DWIN32 -D_MBCS \
-					-Xcompiler "/wd4819,/EHsc,/W3,/nologo,/O2,/Zi" \
+					-Xcompiler "/wd4819,/EHsc,/W3,/nologo,/Ox,/Zi" \
 					-Xcompiler $$MSVCRT_LINK_FLAG_RELEASE \
 					-c -o ${QMAKE_FILE_OUT} ${QMAKE_FILE_NAME}
 	cuda.dependency_type = TYPE_C
