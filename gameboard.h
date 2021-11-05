@@ -2,7 +2,6 @@
 #define GAMEBOARD_H
 
 #include <cinttypes>
-#include <bitset>
 
 #define SQUARE_COUNT 32
 #define BITS_PER_SQUARE 4
@@ -28,7 +27,7 @@ enum SquareState : boardstate_t {
 
 typedef int8_t boardpos_t;
 
-typedef std::bitset<SQUARE_COUNT*BITS_PER_SQUARE> BoardState;
+typedef boardstate_t BoardState[SQUARE_COUNT];
 
 static const SquareState initialGame[SQUARE_COUNT] = {SQUARE_BLACK, SQUARE_BLACK, SQUARE_BLACK, SQUARE_BLACK,
 											SQUARE_BLACK, SQUARE_BLACK, SQUARE_BLACK, SQUARE_BLACK,
@@ -56,7 +55,7 @@ public:
 	GameBoard();
 	~GameBoard();
 
-	BoardState getBoardState();
+	BoardState* getBoardState();
 	void move(boardpos_t pos1, boardpos_t pos2);
 	void setSquareState(boardpos_t index, SquareState state);
 	SquareState getSquareState(boardpos_t index);

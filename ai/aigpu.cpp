@@ -6,17 +6,17 @@
 Move AIGPU::getMove(GameBoard& board)
 {
 	std::vector<Move>* moves;
-	BoardState boardState = board.getBoardState();
+	BoardState* boardState = board.getBoardState();
 	if(previousMultiJumpPos == BOARD_POS_INVALID)
 	{
-		moves = GPUUtility::getAllBlackMoves(&boardState);
+		moves = GPUUtility::getAllBlackMoves(boardState);
 	}
 	else
 	{
 		moves = AIUtility::getAllBlackJumps(board, previousMultiJumpPos);
 		if(moves->empty())
 		{
-			moves = GPUUtility::getAllBlackMoves(&boardState);
+			moves = GPUUtility::getAllBlackMoves(boardState);
 		}
 	}
 

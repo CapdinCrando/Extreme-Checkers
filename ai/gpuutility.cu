@@ -1,15 +1,16 @@
 #ifdef CUDA_EDIT
 #define CUDA_KERNEL(...)
+#define __syncthreads()
 #else
 #define CUDA_KERNEL(...) <<<__VA_ARGS__>>>
 #endif
 
-#define GET_BOARD_STATE_KERNEL(board, pos) (board[pos/2] >> (pos%2)*4) & 0x7
+//#define GET_BOARD_STATE_KERNEL(board, pos) (board[pos/2] >> (pos%2)*4) & 0x7
 
 #include "gpuutility.h"
 
 #include <cuda_runtime.h>
-#include <device_functions.h>
+#include <cuda_runtime_api.h>
 #include <device_launch_parameters.h>
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
@@ -34,13 +35,21 @@ __global__ void printKernel()
 
 __global__ void getAllBlackMovesKernel(Move* moveList, boardstate_t* board)
 {
+	__shared__ boardstate_t boardTile[SQUARE_COUNT];
+	__shared__ Move moveTile[4*SQUARE_COUNT];
+	__shared__ boardpos_t cornerTile[SQUARE_COUNT][4];
+
 	unsigned int i = threadIdx.x;
 
-	Move* moveListBlock = &moveList[i*4];
+	boardTile[i] = board[i];
+	cornerTile[i][0] = cornerListDev[i][0];
+	cornerTile[i][1] = cornerListDev[i][1];
+	cornerTile[i][2] = cornerListDev[i][2];
+	cornerTile[i][3] = cornerListDev[i][3];
+	__syncthreads();
 
-	Move m;
-	m.oldPos = i;
-	boardstate_t state = GET_BOARD_STATE_KERNEL(board, i);
+	Move* moveBlock = &moveTile[i*4];
+	boardstate_t state = boardTile[i];
 	if(SQUARE_ISBLACK(state))
 	{
 		uint8_t cornerMin = 2;
@@ -48,55 +57,56 @@ __global__ void getAllBlackMovesKernel(Move* moveList, boardstate_t* board)
 		for(uint8_t j = cornerMin; j < 4; j++)
 		{
 			// Get move
-			boardpos_t move = cornerListDev[i][j];
+			boardpos_t move = cornerTile[i][j];
 			// Check if position is invalid
 			if(move != BOARD_POS_INVALID)
 			{
 				// Check if space is empty
-				boardstate_t moveState = GET_BOARD_STATE_KERNEL(board, move);
+				boardstate_t moveState = boardTile[move];
 				if(SQUARE_ISEMPTY(moveState))
 				{
 					// Add move to potential moves
-					m.newPos = move;
-					m.moveType = MOVE_MOVE;
+					moveBlock[j].oldPos = i;
+					moveBlock[j].newPos = move;
+					moveBlock[j].moveType = MOVE_MOVE;
 					//moves->push_back(m);
-					moveListBlock[j] = m;
+					//cudaMemcpyAsync(&moveBlock[j], &m, sizeof(Move), cudaMemcpyDeviceToDevice);
 				}
 				else if(!(SQUARE_ISBLACK(moveState)))
 				{
 					// Get jump
-					boardpos_t jump = cornerListDev[move][j];
+					boardpos_t jump = cornerTile[move][j];
 					// Check if position is invalid
 					if(jump != BOARD_POS_INVALID)
 					{
 						// Check if space is empty
-						if(SQUARE_ISEMPTY(GET_BOARD_STATE_KERNEL(board, jump)))
+						if(SQUARE_ISEMPTY(boardTile[jump]))
 						{
 							// Add move to potential moves
-							m.newPos = jump;
-							m.jumpPos = move;
+							moveBlock[j].newPos = jump;
+							moveBlock[j].jumpPos = move;
 							// Check for multi
-							m.moveType = MOVE_JUMP;
+							moveBlock[j].moveType = MOVE_JUMP;
 							for(uint8_t k = 0; k < 4; k++)
 							{
-								boardpos_t moveMulti = cornerListDev[jump][k];
+								boardpos_t moveMulti = cornerTile[jump][k];
 								// Check if position is invalid
 								if(moveMulti != BOARD_POS_INVALID)
 								{
 									if(moveMulti != move)
 									{
-										boardstate_t moveStateMulti = GET_BOARD_STATE_KERNEL(board, moveMulti);
+										boardstate_t moveStateMulti = boardTile[moveMulti];
 										if(SQUARE_ISNOTEMPTY(moveStateMulti))
 										{
 											if(!(SQUARE_ISBLACK(moveStateMulti)))
 											{
-												boardpos_t jumpMulti = cornerListDev[moveMulti][k];
+												boardpos_t jumpMulti = cornerTile[moveMulti][k];
 												if(jumpMulti != BOARD_POS_INVALID)
 												{
-													boardstate_t jumpStateMulti = GET_BOARD_STATE_KERNEL(board, jumpMulti);
+													boardstate_t jumpStateMulti = boardTile[jumpMulti];
 													if(SQUARE_ISEMPTY(jumpStateMulti))
 													{
-														m.moveType = MOVE_JUMP_MULTI;
+														moveBlock[j].moveType = MOVE_JUMP_MULTI;
 														break;
 													}
 												}
@@ -105,13 +115,18 @@ __global__ void getAllBlackMovesKernel(Move* moveList, boardstate_t* board)
 									}
 								}
 							}
-							moveListBlock[j] = m;
+							//cudaMemcpyAsync(&moveBlock[j], &m, sizeof(Move), cudaMemcpyDeviceToDevice);
 						}
 					}
 				}
 			}
 		}
 	}
+	unsigned int i4 = i*4;
+	moveList[i4] = moveTile[i4];
+	moveList[i4+1] = moveTile[i4+1];
+	moveList[i4+2] = moveTile[i4+2];
+	moveList[i4+3] = moveTile[i4+3];
 }
 
 std::vector<Move>* GPUUtility::getAllBlackMoves(BoardState* board)
