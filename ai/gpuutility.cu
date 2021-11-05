@@ -5,7 +5,7 @@
 #define CUDA_KERNEL(...) <<<__VA_ARGS__>>>
 #endif
 
-//#define GET_BOARD_STATE_KERNEL(board, pos) (board[pos/2] >> (pos%2)*4) & 0x7
+
 
 #include "gpuutility.h"
 
@@ -131,8 +131,6 @@ __global__ void getAllBlackMovesKernel(Move* moveList, boardstate_t* board)
 
 std::vector<Move>* GPUUtility::getAllBlackMoves(BoardState* board)
 {
-	cudaEvent_t start_k, stop_k;
-
 	Move* moves_dev;
 	cudaMalloc(&moves_dev, 4*32*sizeof(Move));
 	cudaMemset(&moves_dev, 0, 4*32*sizeof(Move));
@@ -141,12 +139,18 @@ std::vector<Move>* GPUUtility::getAllBlackMoves(BoardState* board)
 	cudaMalloc(&board_dev, sizeof(BoardState));
 	cudaMemcpy(board_dev, board, sizeof(BoardState), cudaMemcpyHostToDevice);
 
+#ifdef PROFILING
+	cudaEvent_t start_k, stop_k;
+
 	cudaEventCreate(&start_k);
 	cudaEventCreate(&stop_k);
 	cudaEventRecord(start_k);
+#endif
 	getAllBlackMovesKernel CUDA_KERNEL(1,32) (moves_dev, board_dev);
 	cudaDeviceSynchronize();
+#ifdef PROFILING
 	cudaEventRecord(stop_k);
+#endif
 
 	Move* moves_host = new Move[32*4];
 	cudaMemcpy(moves_host, moves_dev, 32*4*sizeof(Move), cudaMemcpyDeviceToHost);
@@ -170,10 +174,12 @@ std::vector<Move>* GPUUtility::getAllBlackMoves(BoardState* board)
 		}
 	}
 
+#ifdef PROFILING
 	cudaEventSynchronize(stop_k);
 	float milliseconds = 0;
 	cudaEventElapsedTime(&milliseconds, start_k, stop_k);
 	printf("Kernel executed in %.3f us\n", milliseconds*1000);
+#endif
 
 	delete[] moves_host;
 	if(jumps->empty())
