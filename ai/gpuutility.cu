@@ -131,6 +131,8 @@ __global__ void getAllBlackMovesKernel(Move* moveList, boardstate_t* board)
 
 std::vector<Move>* GPUUtility::getAllBlackMoves(BoardState* board)
 {
+	cudaEvent_t start_k, stop_k;
+
 	Move* moves_dev;
 	cudaMalloc(&moves_dev, 4*32*sizeof(Move));
 	cudaMemset(&moves_dev, 0, 4*32*sizeof(Move));
@@ -139,13 +141,19 @@ std::vector<Move>* GPUUtility::getAllBlackMoves(BoardState* board)
 	cudaMalloc(&board_dev, sizeof(BoardState));
 	cudaMemcpy(board_dev, board, sizeof(BoardState), cudaMemcpyHostToDevice);
 
+	cudaEventCreate(&start_k);
+	cudaEventCreate(&stop_k);
+	cudaEventRecord(start_k);
 	getAllBlackMovesKernel CUDA_KERNEL(1,32) (moves_dev, board_dev);
 	cudaDeviceSynchronize();
+	cudaEventRecord(stop_k);
 
 	Move* moves_host = new Move[32*4];
 	cudaMemcpy(moves_host, moves_dev, 32*4*sizeof(Move), cudaMemcpyDeviceToHost);
 	cudaFree(moves_dev);
 	cudaFree(board_dev);
+
+
 
 	std::vector<Move>* moves = new std::vector<Move>;
 	std::vector<Move>* jumps = new std::vector<Move>;
@@ -161,6 +169,12 @@ std::vector<Move>* GPUUtility::getAllBlackMoves(BoardState* board)
 			else moves->push_back(m);
 		}
 	}
+
+	cudaEventSynchronize(stop_k);
+	float milliseconds = 0;
+	cudaEventElapsedTime(&milliseconds, start_k, stop_k);
+	printf("Kernel executed in %.3f us\n", milliseconds*1000);
+
 	delete[] moves_host;
 	if(jumps->empty())
 	{
