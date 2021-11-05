@@ -28,11 +28,26 @@ __constant__ const boardpos_t cornerListDev[SQUARE_COUNT][4] = {
 	{-1, 24, -1, -1},{24, 25, -1, -1},{25, 26, -1, -1},{26, 27, -1, -1}
 };
 
-__global__ void printKernel()
+__global__ void getMoveKernel(Move* move)
 {
-	printf("Hello from mykernel\n");
+
 }
 
+
+
+
+Move GPUUtility::getMove()
+{
+	Move *move_host, *move_dev;
+	cudaMalloc(&move_dev, sizeof(Move));
+	getMoveKernel CUDA_KERNEL(1,32) (move_dev);
+	cudaMemcpy(move_host, move_dev, sizeof(result_t), cudaMemcpyDeviceToHost);
+	return *move_host;
+}
+
+
+
+// OLD CODE BELOW
 __global__ void getAllBlackMovesKernel(Move* moveList, boardstate_t* board)
 {
 	__shared__ boardstate_t boardTile[SQUARE_COUNT];
@@ -128,7 +143,6 @@ __global__ void getAllBlackMovesKernel(Move* moveList, boardstate_t* board)
 	moveList[i4+2] = moveTile[i4+2];
 	moveList[i4+3] = moveTile[i4+3];
 }
-
 std::vector<Move>* GPUUtility::getAllBlackMoves(BoardState* board)
 {
 	Move* moves_dev;
@@ -189,10 +203,4 @@ std::vector<Move>* GPUUtility::getAllBlackMoves(BoardState* board)
 	}
 	delete moves;
 	return jumps;
-}
-
-void GPUUtility::testPrint()
-{
-	printKernel CUDA_KERNEL(1,8) ();
-	cudaDeviceSynchronize();
 }
