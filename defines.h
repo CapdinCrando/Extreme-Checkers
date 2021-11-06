@@ -2,12 +2,11 @@
 #define DEFINES_H
 
 #include <cinttypes>
-#include <QStringList>
 #include <vector>
 
 #define NODE_DEPTH_MINIMAX 6
 #define NODE_DEPTH_PARALLEL 6
-
+#define NODE_DEPTH_GPU 6
 enum GameState : int8_t
 {
 	GAME_ERROR = -1,

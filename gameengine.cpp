@@ -1,4 +1,5 @@
 #include "gameengine.h"
+#include "ai/gpuutility.h"
 
 #ifdef QT_DEBUG
 #include <iostream>
