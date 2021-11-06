@@ -168,7 +168,6 @@ __device__ void getRedJumpsGPU(Move* jumpsOut, unsigned int& jumpCount, boardpos
 									jumps[jumpIndex].jumpPos = move;
 									// Check for multi
 									jumps[jumpIndex].moveType = MOVE_JUMP;
-									printf("Adding jump: %i,%i,%i,%i\n", jumps[jumpIndex].oldPos, jumps[jumpIndex].newPos, jumps[jumpIndex].jumpPos, jumps[jumpIndex].moveType);
 									for(uint8_t k = 0; k < 4; k++)
 									{
 										boardpos_t moveMulti = cornerTile[jump][k];
@@ -973,7 +972,7 @@ __global__ void getMoveKernel(Move* move, boardstate_t* board)
 		}
 		else previousMultiJumpPosGPU = -1;
 		*move = moveTile;
-		printf("Selected Move: %i,%i,%i,%i with a result of %i\n", moveTile.oldPos, moveTile.newPos, moveTile.jumpPos, moveTile.moveType, maxResult);
+		//printf("Selected Move: %i,%i,%i,%i with a result of %i\n", moveTile.oldPos, moveTile.newPos, moveTile.jumpPos, moveTile.moveType, maxResult);
 	}
 	__syncthreads();
 }
@@ -983,7 +982,7 @@ void GPUUtility::initializeGPU()
 	cudaDeviceSetLimit(cudaLimitDevRuntimeSyncDepth, NODE_DEPTH_GPU + 1);
 	//cudaDeviceSetLimit(cudaLimitDevRuntimePendingLaunchCount, 2048);
 	//cudaDeviceSetLimit(cudaLimitMallocHeapSize, 67108864);
-	cudaDeviceSetLimit(cudaLimitStackSize, 1024);
+	//cudaDeviceSetLimit(cudaLimitStackSize, 1024);
 	size_t stack_limit;
 	cudaDeviceGetLimit(&stack_limit,cudaLimitStackSize);
 	printf("Stack size: %llu\n", stack_limit);
