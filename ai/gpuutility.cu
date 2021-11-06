@@ -22,6 +22,7 @@ __device__ T atomicCAS(T* x, T2 y, T2 z);
 #define CUDA_KERNEL(...) <<<__VA_ARGS__>>>
 #endif
 
+#ifdef QT_DEBUG
 #define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
 __device__ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
 {
@@ -30,6 +31,9 @@ __device__ inline void gpuAssert(cudaError_t code, const char *file, int line, b
 	  printf("GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
    }
 }
+#else
+#define gpuErrchk(ans) (ans)
+#endif
 
 typedef int result_gpu_t;
 #define IS_ROOT_THREAD threadIdx.x == 0

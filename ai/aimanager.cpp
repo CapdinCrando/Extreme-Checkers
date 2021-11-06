@@ -4,8 +4,6 @@
 #include "aiparallel.h"
 #include "aigpu.h"
 
-#define PROFILING
-
 #ifdef QT_DEBUG
 #define PROFILING
 #endif
