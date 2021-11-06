@@ -50,11 +50,9 @@ __constant__ const boardpos_t cornerListDev[SQUARE_COUNT][4] = {
 };
 
 
-__device__ void getBlackJumpsGPU(Move* jumpsOut, unsigned int& jumpCount, boardstate_t* board, boardpos_t (&cornerTile)[SQUARE_COUNT][4])
+__device__ void getBlackJumpsGPU(Move* jumpsOut, unsigned int& jumpCount, boardpos_t i, boardstate_t* board, boardpos_t (&cornerTile)[SQUARE_COUNT][4])
 {
 	__shared__ Move jumps[MOVE_BUFFER_SIZE];
-	unsigned int i = previousMultiJumpPosGPU;
-	//printf("Multijump pos: %i\n", i);
 
 	boardstate_t state = board[i];
 	if(SQUARE_ISNOTEMPTY(state))
@@ -133,10 +131,9 @@ __device__ void getBlackJumpsGPU(Move* jumpsOut, unsigned int& jumpCount, boards
 	__syncthreads();
 }
 
-__device__ void getRedJumpsGPU(Move* jumpsOut, unsigned int& jumpCount, boardstate_t* board, boardpos_t (&cornerTile)[SQUARE_COUNT][4])
+__device__ void getRedJumpsGPU(Move* jumpsOut, unsigned int& jumpCount, boardpos_t i, boardstate_t* board, boardpos_t (&cornerTile)[SQUARE_COUNT][4])
 {
 	__shared__ Move jumps[MOVE_BUFFER_SIZE];
-	unsigned int i = previousMultiJumpPosGPU;
 	//printf("Multijump pos: %i\n", i);
 
 	boardstate_t state = board[i];
@@ -629,10 +626,10 @@ __global__ void evalBlackMoveKernel(result_gpu_t* result, boardstate_t* board, M
 	if(moveTile.moveType == MOVE_JUMP_MULTI)
 	{
 		// Create moves
-		getBlackJumpsGPU(moves, moveCount, boardTile, cornerTile);
+		if(x < 4) getBlackJumpsGPU(moves, moveCount, moveTile.newPos, boardTile, cornerTile);
 		if(moveCount == 0)
 		{
-			getBlackMovesGPU(moves, moveCount, boardTile, cornerTile);
+			//getBlackMovesGPU(moves, moveCount, boardTile, cornerTile);
 		}
 
 		// Evaluate Moves (recursive)
@@ -754,10 +751,10 @@ __global__ void evalRedMoveKernel(result_gpu_t* result, boardstate_t* board, Mov
 	if(moveTile.moveType == MOVE_JUMP_MULTI)
 	{
 		// Create moves
-		getRedJumpsGPU(moves, moveCount, boardTile, cornerTile);
+		if(x < 4) getRedJumpsGPU(moves, moveCount, moveTile.newPos, boardTile, cornerTile);
 		if(moveCount == 0)
 		{
-			getRedMovesGPU(moves, moveCount, boardTile, cornerTile);
+			//getRedMovesGPU(moves, moveCount, boardTile, cornerTile);
 		}
 
 		// Evaluate Moves (recursive)
@@ -847,7 +844,7 @@ __global__ void getMoveKernel(Move* move, boardstate_t* board)
 	}
 	else
 	{
-		if(x < 4) getBlackJumpsGPU(moves, moveCount, board, cornerTile);
+		if(x < 4) getBlackJumpsGPU(moves, moveCount, previousMultiJumpPosGPU, board, cornerTile);
 		if(moveCount == 0)
 		{
 			getBlackMovesGPU(moves, moveCount, board, cornerTile);
