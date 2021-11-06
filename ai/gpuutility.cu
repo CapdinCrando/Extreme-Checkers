@@ -23,12 +23,11 @@ __device__ T atomicCAS(T* x, T2 y, T2 z);
 #endif
 
 #define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
-inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
+__device__ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
 {
    if (code != cudaSuccess)
    {
-	  fprintf(stderr,"GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
-	  if (abort) exit(code);
+	  printf("GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
    }
 }
 
@@ -50,19 +49,18 @@ __constant__ const boardpos_t cornerListDev[SQUARE_COUNT][4] = {
 };
 
 
-__device__ void getBlackJumpsGPU(Move* jumpsOut, unsigned int& jumpCount, boardpos_t i, boardstate_t* board, boardpos_t (&cornerTile)[SQUARE_COUNT][4])
+__device__ void getBlackJumpsGPU(Move* jumpsOut, unsigned int& jumpCount, boardpos_t pos, boardstate_t* board, boardpos_t (&cornerTile)[SQUARE_COUNT][4])
 {
 	__shared__ Move jumps[MOVE_BUFFER_SIZE];
+	unsigned int i = pos;
 
-	boardstate_t state = board[i];
-	if(SQUARE_ISNOTEMPTY(state))
+	unsigned int j = threadIdx.x;
+	if(j < 4)
 	{
-		if(SQUARE_ISBLACK(state))
+		boardstate_t state = board[i];
+		if(SQUARE_ISNOTEMPTY(state))
 		{
-			uint8_t cornerMin = 2;
-			if(SQUARE_ISKING(state)) cornerMin = 0;
-			unsigned int j = threadIdx.x;
-			if(j > cornerMin)
+			if(SQUARE_ISBLACK(state))
 			{
 				// Get move
 				boardpos_t move = cornerTile[i][j];
@@ -71,7 +69,7 @@ __device__ void getBlackJumpsGPU(Move* jumpsOut, unsigned int& jumpCount, boardp
 				{
 					// Check if space is empty
 					boardstate_t moveState = board[move];
-					if(SQUARE_ISEMPTY(moveState))
+					if(SQUARE_ISNOTEMPTY(moveState))
 					{
 						if(!(SQUARE_ISBLACK(moveState)))
 						{
@@ -127,24 +125,22 @@ __device__ void getBlackJumpsGPU(Move* jumpsOut, unsigned int& jumpCount, boardp
 		}
 	}
 	__syncthreads();
-	if(i < jumpCount) jumpsOut[i] = jumps[i];
+	if(j < jumpCount) jumpsOut[j] = jumps[j];
 	__syncthreads();
 }
 
-__device__ void getRedJumpsGPU(Move* jumpsOut, unsigned int& jumpCount, boardpos_t i, boardstate_t* board, boardpos_t (&cornerTile)[SQUARE_COUNT][4])
+__device__ void getRedJumpsGPU(Move* jumpsOut, unsigned int& jumpCount, boardpos_t pos, boardstate_t* board, boardpos_t (&cornerTile)[SQUARE_COUNT][4])
 {
 	__shared__ Move jumps[MOVE_BUFFER_SIZE];
-	//printf("Multijump pos: %i\n", i);
+	unsigned int i = pos;
 
-	boardstate_t state = board[i];
-	if(SQUARE_ISNOTEMPTY(state))
+	unsigned int j = threadIdx.x;
+	if(j < 4)
 	{
-		if(!(SQUARE_ISBLACK(state)))
+		boardstate_t state = board[i];
+		if(SQUARE_ISNOTEMPTY(state))
 		{
-			uint8_t cornerMax = 2;
-			if(SQUARE_ISKING(state)) cornerMax = 4;
-			unsigned int j = threadIdx.x;
-			if(j < cornerMax)
+			if(!(SQUARE_ISBLACK(state)))
 			{
 				// Get move
 				boardpos_t move = cornerTile[i][j];
@@ -153,7 +149,7 @@ __device__ void getRedJumpsGPU(Move* jumpsOut, unsigned int& jumpCount, boardpos
 				{
 					// Check if space is empty
 					boardstate_t moveState = board[move];
-					if(SQUARE_ISEMPTY(moveState))
+					if(SQUARE_ISNOTEMPTY(moveState))
 					{
 						if(SQUARE_ISBLACK(moveState))
 						{
@@ -172,6 +168,7 @@ __device__ void getRedJumpsGPU(Move* jumpsOut, unsigned int& jumpCount, boardpos
 									jumps[jumpIndex].jumpPos = move;
 									// Check for multi
 									jumps[jumpIndex].moveType = MOVE_JUMP;
+									printf("Adding jump: %i,%i,%i,%i\n", jumps[jumpIndex].oldPos, jumps[jumpIndex].newPos, jumps[jumpIndex].jumpPos, jumps[jumpIndex].moveType);
 									for(uint8_t k = 0; k < 4; k++)
 									{
 										boardpos_t moveMulti = cornerTile[jump][k];
@@ -209,7 +206,7 @@ __device__ void getRedJumpsGPU(Move* jumpsOut, unsigned int& jumpCount, boardpos
 		}
 	}
 	__syncthreads();
-	if(i < jumpCount) jumpsOut[i] = jumps[i];
+	if(j < jumpCount) jumpsOut[j] = jumps[j];
 	__syncthreads();
 }
 
@@ -560,7 +557,7 @@ __device__ bool evalBoardSquareGPU(result_gpu_t* resultOut, boardstate_t* board,
 		if(!retVal) *resultOut = blackCount - redCount;
 		if(*resultOut < -3)
 		{
-			printf("Eval: %i,%i,%i,%i,%i,%i\n", *resultOut, blackCount, redCount, blackMoveFound, redMoveFound, retVal);
+			//printf("Eval: %i,%i,%i,%i,%i,%i ; %i\n", *resultOut, blackCount, redCount, blackMoveFound, redMoveFound, retVal, board[0]);
 		}
 	}
 	__syncthreads();
@@ -580,6 +577,7 @@ __global__ void evalBlackMoveKernel(result_gpu_t* result, boardstate_t* board, M
 	__shared__ int resultIndex;
 	result_gpu_t* resultOut = &result[blockIdx.x];
 	unsigned int x = threadIdx.x;
+	//if(IS_ROOT_THREAD) if(board[0] == 0 && board[1] == 0) printf("Black board empty @D%i, X:%i\n", depth, oldMoves[blockIdx.x].newPos);
 
 	// Copy board
 	boardTile[x] = board[x];
@@ -612,14 +610,22 @@ __global__ void evalBlackMoveKernel(result_gpu_t* result, boardstate_t* board, M
 	__syncthreads();
 
 	// Check depth
-	if(evalBoardSquareGPU(resultOut, boardTile, cornerTile)) return;
+	if(evalBoardSquareGPU(resultOut, boardTile, cornerTile))
+	{
+		if(IS_ROOT_THREAD)
+		{
+			//if(*resultOut < -3) printf("Black result @D%i: %i\n", depth, *resultOut);
+		}
+		return;
+	}
 	//if(IS_ROOT_THREAD) printf("Result @ D%i: %i\n", depth, *result);
 	if(depth == NODE_DEPTH_GPU)
 	{
 		if(IS_ROOT_THREAD)
 		{
-			if(*resultOut < -3) printf("Red result @D%i: %i\n", depth, *resultOut);
+			//printf("Red result @D%i: %i\n", depth, *resultOut);
 		}
+		return;
 	}
 
 	__shared__ Move* moves;
@@ -627,27 +633,36 @@ __global__ void evalBlackMoveKernel(result_gpu_t* result, boardstate_t* board, M
 	__shared__ boardstate_t* newBoard;
 	if(IS_ROOT_THREAD)
 	{
-		cudaMalloc(&moves, MOVE_BUFFER_SIZE*sizeof(Move));
-		cudaMalloc(&newBoard, SQUARE_COUNT*sizeof(boardstate_t));
+		gpuErrchk(cudaMalloc(&moves, MOVE_BUFFER_SIZE*sizeof(Move)));
+		gpuErrchk(cudaMalloc(&newBoard, SQUARE_COUNT*sizeof(boardstate_t)));
 	}
 	__syncthreads();
 	newBoard[x] = boardTile[x];
+	__syncthreads();
 
 	if(moveTile.moveType == MOVE_JUMP_MULTI)
 	{
 		// Create moves
-		if(x < 4) getBlackJumpsGPU(moves, moveCount, moveTile.newPos, boardTile, cornerTile);
+		getBlackJumpsGPU(moves, moveCount, moveTile.newPos, boardTile, cornerTile);
 		if(moveCount == 0)
 		{
 			getBlackMovesGPU(moves, moveCount, boardTile, cornerTile);
 		}
 
 		// Evaluate Moves (recursive)
+		__syncthreads();
+		/*if(moveCount == 0)
+		{
+			if(IS_ROOT_THREAD) //printf("Black result1 @D%i: %i ; %i\n", depth, *resultOut, boardTile[0]);
+			return;
+		}*/
 		if(IS_ROOT_THREAD)
 		{
-			cudaMalloc(&results, moveCount*sizeof(result_gpu_t));
+			gpuErrchk(cudaMalloc(&results, moveCount*sizeof(result_gpu_t)));
+			//if(depth == 3) if(newBoard[0] == 0 && newBoard[1] == 0) printf("Null found\n");
 			evalBlackMoveKernel CUDA_KERNEL(moveCount, SQUARE_COUNT) (results, newBoard, moves, depth + 1);
-			cudaDeviceSynchronize();
+			gpuErrchk( cudaPeekAtLastError() );
+			gpuErrchk( cudaDeviceSynchronize() );
 			cudaFree(moves);
 			cudaFree(newBoard);
 			resultVal = RESULT_RED_WIN;
@@ -672,11 +687,19 @@ __global__ void evalBlackMoveKernel(result_gpu_t* result, boardstate_t* board, M
 
 		// Evaluate Moves (recursive)
 		//printf("Possible Move: %i,%i,%i,%i\n", moves[x].oldPos, moves[x].newPos, moves[x].jumpPos, moves[x].moveType);
+		__syncthreads();
+		/*if(moveCount == 0)
+		{
+			if(IS_ROOT_THREAD) //printf("Black result2 @D%i: %i ; %i,%i,%i\n", depth, *resultOut, board[0], boardTile[0], newBoard[0]);
+			return;
+		}*/
 		if(IS_ROOT_THREAD)
 		{
-			cudaMalloc(&results, moveCount*sizeof(result_gpu_t));
+			gpuErrchk(cudaMalloc(&results, moveCount*sizeof(result_gpu_t)));
+			//if(newBoard == nullptr) printf("Null found\n");
 			evalRedMoveKernel CUDA_KERNEL(moveCount, SQUARE_COUNT) (results, newBoard, moves, depth + 1);
-			cudaDeviceSynchronize();
+			gpuErrchk( cudaPeekAtLastError() );
+			gpuErrchk( cudaDeviceSynchronize() );
 			cudaFree(moves);
 			cudaFree(newBoard);
 			resultVal = RESULT_BLACK_WIN;
@@ -714,9 +737,12 @@ __global__ void evalRedMoveKernel(result_gpu_t* result, boardstate_t* board, Mov
 	__shared__ int resultIndex;
 	result_gpu_t* resultOut = &result[blockIdx.x];
 	unsigned int x = threadIdx.x;
+	//if(threadIdx.x == 1) if(board[0] == 0 && board[1] == 0) printf("Red board empty @D%i\n", depth);
 
 	// Copy board
 	boardTile[x] = board[x];
+	__syncthreads();
+	//if(threadIdx.x == 1) if(boardTile[0] == 0 && boardTile[1] == 0) printf("Red boardtile empty @D%i\n", depth);
 
 	// Copy cornerTile for faster calculations
 	cornerTile[x][0] = cornerListDev[x][0];
@@ -746,13 +772,19 @@ __global__ void evalRedMoveKernel(result_gpu_t* result, boardstate_t* board, Mov
 	__syncthreads();
 
 	// Check depth
-	if(evalBoardSquareGPU(resultOut, boardTile, cornerTile)) return;
-	//
+	if(evalBoardSquareGPU(resultOut, boardTile, cornerTile))
+	{
+		if(IS_ROOT_THREAD)
+		{
+			//if(*resultOut < -3) printf("Red result @D%i: %i\n", depth, *resultOut);
+		}
+		return;
+	}
 	if(depth == NODE_DEPTH_GPU)
 	{
 		if(IS_ROOT_THREAD)
 		{
-			if(*resultOut < -3) printf("Red result @D%i: %i\n", depth, *resultOut);
+			//printf("Red result @D%i: %i\n", depth, *resultOut);
 		}
 		return;
 	}
@@ -760,28 +792,38 @@ __global__ void evalRedMoveKernel(result_gpu_t* result, boardstate_t* board, Mov
 	__shared__ Move* moves;
 	__shared__ result_gpu_t* results;
 	__shared__ boardstate_t* newBoard;
+	__syncthreads();
 	if(IS_ROOT_THREAD)
 	{
-		cudaMalloc(&moves, MOVE_BUFFER_SIZE*sizeof(Move));
-		cudaMalloc(&newBoard, SQUARE_COUNT*sizeof(boardstate_t));
+		gpuErrchk(cudaMalloc(&moves, MOVE_BUFFER_SIZE*sizeof(Move)));
+		gpuErrchk(cudaMalloc(&newBoard, SQUARE_COUNT*sizeof(boardstate_t)));
 	}
 	__syncthreads();
 	newBoard[x] = boardTile[x];
+	__syncthreads();
 	if(moveTile.moveType == MOVE_JUMP_MULTI)
 	{
 		// Create moves
-		if(x < 4) getRedJumpsGPU(moves, moveCount, moveTile.newPos, boardTile, cornerTile);
+		getRedJumpsGPU(moves, moveCount, moveTile.newPos, boardTile, cornerTile);
 		if(moveCount == 0)
 		{
 			getRedMovesGPU(moves, moveCount, boardTile, cornerTile);
 		}
 
 		// Evaluate Moves (recursive)
+		__syncthreads();
+		/*if(moveCount == 0)
+		{
+			if(IS_ROOT_THREAD) printf("Red result @D%i: %i ; %i\n", depth, *resultOut, boardTile[0]);
+			return;
+		}*/
 		if(IS_ROOT_THREAD)
 		{
-			cudaMalloc(&results, moveCount*sizeof(result_gpu_t));
+			gpuErrchk(cudaMalloc(&results, moveCount*sizeof(result_gpu_t)));
+			//if(newBoard == nullptr) printf("Null found\n");
 			evalRedMoveKernel CUDA_KERNEL(moveCount, SQUARE_COUNT) (results, newBoard, moves, depth + 1);
-			cudaDeviceSynchronize();
+			gpuErrchk( cudaPeekAtLastError() );
+			gpuErrchk( cudaDeviceSynchronize() );
 			cudaFree(moves);
 			cudaFree(newBoard);
 			resultVal = RESULT_BLACK_WIN;
@@ -803,13 +845,22 @@ __global__ void evalRedMoveKernel(result_gpu_t* result, boardstate_t* board, Mov
 	{
 		// Create moves
 		getBlackMovesGPU(moves, moveCount, boardTile, cornerTile);
+		//if(threadIdx.x == 1) if(newBoard[0] == 0 && newBoard[1] == 0) printf("Red newboard empty @D%i\n", depth);
 
 		// Evaluate Moves (recursive)
+		__syncthreads();
+		/*if(moveCount == 0)
+		{
+			//if(IS_ROOT_THREAD) printf("Red result @D%i: %i\n", depth, *resultOut);
+			return;
+		}*/
 		if(IS_ROOT_THREAD)
 		{
-			cudaMalloc(&results, moveCount*sizeof(result_gpu_t));
+			gpuErrchk(cudaMalloc(&results, moveCount*sizeof(result_gpu_t)));
+			//if(depth == 3) if(newBoard[0] == 0 && newBoard[1] == 0) printf("Null found2\n");
 			evalBlackMoveKernel CUDA_KERNEL(moveCount, SQUARE_COUNT) (results, newBoard, moves, depth + 1);
-			cudaDeviceSynchronize();
+			gpuErrchk( cudaPeekAtLastError() );
+			gpuErrchk( cudaDeviceSynchronize() );
 			cudaFree(moves);
 			cudaFree(newBoard);
 			resultVal = RESULT_RED_WIN;
@@ -858,6 +909,7 @@ __global__ void getMoveKernel(Move* move, boardstate_t* board)
 	cornerTile[x][1] = cornerListDev[x][1];
 	cornerTile[x][2] = cornerListDev[x][2];
 	cornerTile[x][3] = cornerListDev[x][3];
+	__syncthreads();
 
 	if(previousMultiJumpPosGPU == BOARD_POS_INVALID)
 	{
@@ -865,7 +917,7 @@ __global__ void getMoveKernel(Move* move, boardstate_t* board)
 	}
 	else
 	{
-		if(x < 4) getBlackJumpsGPU(moves, moveCount, previousMultiJumpPosGPU, board, cornerTile);
+		getBlackJumpsGPU(moves, moveCount, previousMultiJumpPosGPU, board, cornerTile);
 		if(moveCount == 0)
 		{
 			getBlackMovesGPU(moves, moveCount, board, cornerTile);
@@ -885,11 +937,12 @@ __global__ void getMoveKernel(Move* move, boardstate_t* board)
 	__shared__ result_gpu_t* results;
 	if(IS_ROOT_THREAD)
 	{
-		moveCount = 1;
+		//moveCount = 1;
 		cudaMalloc(&results, moveCount*sizeof(result_gpu_t));
 		//printf("Possible move count: %i\n", moveCount);
 		evalBlackMoveKernel CUDA_KERNEL(moveCount, SQUARE_COUNT) (results, board, moves, 0);
-		cudaDeviceSynchronize();
+		gpuErrchk( cudaPeekAtLastError() );
+		gpuErrchk( cudaDeviceSynchronize() );
 		//printf("Child Kernels finished\n");
 		maxResult = RESULT_RED_WIN;
 		maxIndex = 0;
@@ -899,7 +952,7 @@ __global__ void getMoveKernel(Move* move, boardstate_t* board)
 	// Pick result
 	if(x < moveCount)
 	{
-		printf("Possible Move: %i,%i,%i,%i with a result of %i\n", moves[x].oldPos, moves[x].newPos, moves[x].jumpPos, moves[x].moveType, results[x]);
+		//printf("Possible Move: %i,%i,%i,%i with a result of %i\n", moves[x].oldPos, moves[x].newPos, moves[x].jumpPos, moves[x].moveType, results[x]);
 		atomicMax(&maxResult, results[x]);
 		__syncthreads();
 		if(maxResult == results[x])
@@ -922,15 +975,21 @@ __global__ void getMoveKernel(Move* move, boardstate_t* board)
 		*move = moveTile;
 		printf("Selected Move: %i,%i,%i,%i with a result of %i\n", moveTile.oldPos, moveTile.newPos, moveTile.jumpPos, moveTile.moveType, maxResult);
 	}
+	__syncthreads();
 }
 
 void GPUUtility::initializeGPU()
 {
-	cudaDeviceSetLimit(cudaLimitDevRuntimeSyncDepth, NODE_DEPTH_GPU);
+	cudaDeviceSetLimit(cudaLimitDevRuntimeSyncDepth, NODE_DEPTH_GPU + 1);
+	//cudaDeviceSetLimit(cudaLimitDevRuntimePendingLaunchCount, 2048);
+	//cudaDeviceSetLimit(cudaLimitMallocHeapSize, 67108864);
 	cudaDeviceSetLimit(cudaLimitStackSize, 1024);
 	size_t stack_limit;
 	cudaDeviceGetLimit(&stack_limit,cudaLimitStackSize);
 	printf("Stack size: %llu\n", stack_limit);
+	size_t heap_limit;
+	cudaDeviceGetLimit(&heap_limit,cudaLimitMallocHeapSize);
+	printf("Heap size: %llu\n", heap_limit);
 }
 
 Move GPUUtility::getMove(BoardState* board)
@@ -944,6 +1003,7 @@ Move GPUUtility::getMove(BoardState* board)
 	cudaMemcpy(board_dev, board, sizeof(BoardState), cudaMemcpyHostToDevice);
 
 	getMoveKernel CUDA_KERNEL(1,32) (move_dev, board_dev);
+	cudaDeviceSynchronize();
 	cudaMemcpy(move_host, move_dev, sizeof(Move), cudaMemcpyDeviceToHost);
 	return *move_host;
 

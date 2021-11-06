@@ -6,8 +6,7 @@
 
 #define NODE_DEPTH_MINIMAX 6
 #define NODE_DEPTH_PARALLEL 6
-#define NODE_DEPTH_GPU 3
-
+#define NODE_DEPTH_GPU 2
 enum GameState : int8_t
 {
 	GAME_ERROR = -1,
