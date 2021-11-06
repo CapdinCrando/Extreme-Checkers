@@ -6,7 +6,7 @@
 
 namespace GPUUtility
 {
-	Move getMove();
+	Move getMove(BoardState* board);
 	std::vector<Move>* getAllBlackMoves(BoardState* board);
 }
 

@@ -5,5 +5,5 @@
 
 Move AIGPU::getMove(GameBoard& board)
 {
-	return GPUUtility::getMove();
+	return GPUUtility::getMove(board.getBoardState());
 }

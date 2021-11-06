@@ -104,7 +104,7 @@ QMAKE_LIBDIR += $$CUDA_DIR/lib/$$SYSTEM_NAME \
 CUDA_INC = $$join(INCLUDEPATH,'" -I"','-I"','"')
 
 # Add the necessary libraries
-CUDA_LIB_NAMES = cudart_static kernel32 user32 gdi32 winspool comdlg32 \
+CUDA_LIB_NAMES = cudart_static cudadevrt kernel32 user32 gdi32 winspool comdlg32 \
 				 advapi32 shell32 ole32 oleaut32 uuid odbc32 odbccp32 \
 				 #freeglut glew32
 
@@ -116,27 +116,52 @@ LIBS += $$CUDA_LIBS
 # Configuration of the Cuda compiler
 CONFIG(debug, debug|release) {
 	# Debug mode
+
 	cuda_d.input = CUDA_SOURCES
 	cuda_d.output = $$CUDA_OBJECTS_DIR/${QMAKE_FILE_BASE}_cuda.obj
-	cuda_d.commands = $$CUDA_DIR/bin/nvcc.exe -D_DEBUG $$NVCC_OPTIONS $$CUDA_INC $$LIBS \
+	cuda_d.commands = $$CUDA_DIR/bin/nvcc.exe -D_DEBUG $$NVCC_OPTIONS \
 					  --machine $$SYSTEM_TYPE -arch=$$CUDA_ARCH \
 					  --compile -cudart static -g -DWIN32 -D_MBCS \
 					  -Xcompiler "/wd4819,/EHsc,/W3,/nologo,/Od,/Zi,/RTC1" \
 					  -Xcompiler $$MSVCRT_LINK_FLAG_DEBUG \
-					  -c -o ${QMAKE_FILE_OUT} ${QMAKE_FILE_NAME}
+					  -rdc=true -c -o ${QMAKE_FILE_OUT} ${QMAKE_FILE_NAME}
 	cuda_d.dependency_type = TYPE_C
 	QMAKE_EXTRA_COMPILERS += cuda_d
+
+	CUDA_L_SOURCES = $$CUDA_OBJECTS_DIR/gpuutility_cuda.obj
+	cuda_l.input = CUDA_L_SOURCES
+	cuda_l.output = $$CUDA_OBJECTS_DIR/${QMAKE_FILE_BASE}_link.obj
+	cuda_l.commands = $$CUDA_DIR/bin/nvcc.exe -D_DEBUG $$NVCC_OPTIONS $$CUDA_INC $$LIBS \
+					--machine $$SYSTEM_TYPE -arch=$$CUDA_ARCH \
+					-cudart static -g -DWIN32 -D_MBCS \
+					-Xcompiler "/wd4819,/EHsc,/W3,/nologo,/Od,/Zi,/RTC1" \
+					-Xcompiler $$MSVCRT_LINK_FLAG_DEBUG \
+					-dlink -o ${QMAKE_FILE_OUT} ${QMAKE_FILE_NAME}
+	cuda_l.dependency_type = TYPE_C
+	QMAKE_EXTRA_COMPILERS += cuda_l
 }
 else {
 	# Release mode
 	cuda.input = CUDA_SOURCES
 	cuda.output = $$CUDA_OBJECTS_DIR/${QMAKE_FILE_BASE}_cuda.obj
-	cuda.commands = $$CUDA_DIR/bin/nvcc.exe $$NVCC_OPTIONS $$CUDA_INC $$LIBS \
+	cuda.commands = $$CUDA_DIR/bin/nvcc.exe $$NVCC_OPTIONS \
 					--machine $$SYSTEM_TYPE -arch=$$CUDA_ARCH \
 					--compile -cudart static -DWIN32 -D_MBCS \
 					-Xcompiler "/wd4819,/EHsc,/W3,/nologo,/Ox,/Zi" \
 					-Xcompiler $$MSVCRT_LINK_FLAG_RELEASE \
-					-c -o ${QMAKE_FILE_OUT} ${QMAKE_FILE_NAME}
+					-rdc=true -c -o ${QMAKE_FILE_OUT} ${QMAKE_FILE_NAME}
 	cuda.dependency_type = TYPE_C
 	QMAKE_EXTRA_COMPILERS += cuda
+
+	CUDA_L_SOURCES = $$CUDA_OBJECTS_DIR/gpuutility_cuda.obj
+	cuda_l.input = CUDA_L_SOURCES
+	cuda_l.output = $$CUDA_OBJECTS_DIR/${QMAKE_FILE_BASE}_link.obj
+	cuda_l.commands = $$CUDA_DIR/bin/nvcc.exe $$NVCC_OPTIONS $$CUDA_INC $$LIBS \
+					--machine $$SYSTEM_TYPE -arch=$$CUDA_ARCH \
+					-cudart static -DWIN32 -D_MBCS \
+					-Xcompiler "/wd4819,/EHsc,/W3,/nologo,/Ox,/Zi" \
+					-Xcompiler $$MSVCRT_LINK_FLAG_RELEASE \
+					-dlink -o ${QMAKE_FILE_OUT} ${QMAKE_FILE_NAME}
+	cuda_l.dependency_type = TYPE_C
+	QMAKE_EXTRA_COMPILERS += cuda_l
 }
