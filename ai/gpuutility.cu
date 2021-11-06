@@ -22,6 +22,15 @@ __device__ T atomicCAS(T* x, T2 y, T2 z);
 #define CUDA_KERNEL(...) <<<__VA_ARGS__>>>
 #endif
 
+#define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
+inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
+{
+   if (code != cudaSuccess)
+   {
+	  fprintf(stderr,"GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
+	  if (abort) exit(code);
+   }
+}
 
 typedef int result_gpu_t;
 #define IS_ROOT_THREAD threadIdx.x == 0
@@ -45,6 +54,7 @@ __device__ void getBlackJumpsGPU(Move* jumpsOut, unsigned int& jumpCount, boards
 {
 	__shared__ Move jumps[MOVE_BUFFER_SIZE];
 	unsigned int i = previousMultiJumpPosGPU;
+	//printf("Multijump pos: %i\n", i);
 
 	boardstate_t state = board[i];
 	if(SQUARE_ISNOTEMPTY(state))
@@ -127,6 +137,7 @@ __device__ void getRedJumpsGPU(Move* jumpsOut, unsigned int& jumpCount, boardsta
 {
 	__shared__ Move jumps[MOVE_BUFFER_SIZE];
 	unsigned int i = previousMultiJumpPosGPU;
+	//printf("Multijump pos: %i\n", i);
 
 	boardstate_t state = board[i];
 	if(SQUARE_ISNOTEMPTY(state))
@@ -679,8 +690,8 @@ __global__ void evalBlackMoveKernel(result_gpu_t* result, boardstate_t* board, M
 	if(IS_ROOT_THREAD)
 	{
 		*resultOut = results[resultIndex];
-		//printf("Selected result @D%i: %i <- %i\n", x, result[blockIdx.x], results[resultIndex]);
 		cudaFree(results);
+		//printf("Black Kernel Finished @D%i\n", depth);
 	}
 }
 
@@ -727,7 +738,7 @@ __global__ void evalRedMoveKernel(result_gpu_t* result, boardstate_t* board, Mov
 
 	// Check depth
 	if(evalBoardSquareGPU(resultOut, boardTile, cornerTile)) return;
-	//if(IS_ROOT_THREAD) printf("Red result: %i\n", *result);
+	//if(IS_ROOT_THREAD) printf("Red result @D%i: %i\n", depth, *resultOut);
 	if(depth == NODE_DEPTH_GPU) return;
 
 	__shared__ Move* moves;
@@ -803,6 +814,7 @@ __global__ void evalRedMoveKernel(result_gpu_t* result, boardstate_t* board, Mov
 	{
 		*resultOut = results[resultIndex];
 		cudaFree(results);
+		//printf("Red Kernel Finished @D%i\n", depth);
 	}
 }
 
@@ -857,8 +869,9 @@ __global__ void getMoveKernel(Move* move, boardstate_t* board)
 	{
 		cudaMalloc(&results, moveCount*sizeof(result_gpu_t));
 		//printf("Possible move count: %i\n", moveCount);
-		evalBlackMoveKernel CUDA_KERNEL(moveCount, SQUARE_COUNT) (results, board, moves, 0);
+		evalBlackMoveKernel CUDA_KERNEL(1, SQUARE_COUNT) (results, board, moves, 0);
 		cudaDeviceSynchronize();
+		//printf("Child Kernels finished\n");
 		maxResult = RESULT_RED_WIN;
 		maxIndex = 0;
 	}
@@ -892,8 +905,13 @@ __global__ void getMoveKernel(Move* move, boardstate_t* board)
 	}
 }
 
-Move GPUUtility::getMove(BoardState* board)
+void GPUUtility::initializeGPU()
 {
+	cudaDeviceSetLimit(cudaLimitDevRuntimeSyncDepth, NODE_DEPTH_GPU);
+}
+
+Move GPUUtility::getMove(BoardState* board)
+{	
 	Move *move_host, *move_dev;
 	move_host = new Move;
 	cudaMalloc(&move_dev, sizeof(Move));
@@ -905,4 +923,6 @@ Move GPUUtility::getMove(BoardState* board)
 	getMoveKernel CUDA_KERNEL(1,32) (move_dev, board_dev);
 	cudaMemcpy(move_host, move_dev, sizeof(Move), cudaMemcpyDeviceToHost);
 	return *move_host;
+
+	// You forgot to free memory dummy
 }

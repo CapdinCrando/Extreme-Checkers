@@ -6,6 +6,7 @@
 
 namespace GPUUtility
 {
+	void initializeGPU();
 	Move getMove(BoardState* board);
 }
 

@@ -6,6 +6,7 @@
 class AIGPU : public AI
 {
 public:
+	AIGPU();
 	Move getMove(GameBoard& board) override;
 	QString getDescription() override { return "Level 4 - GPU AI"; }
 };
