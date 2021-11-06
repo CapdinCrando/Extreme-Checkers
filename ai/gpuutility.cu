@@ -974,37 +974,41 @@ __global__ void getMoveKernel(Move* move, boardstate_t* board)
 		*move = moveTile;
 		//printf("Selected Move: %i,%i,%i,%i with a result of %i\n", moveTile.oldPos, moveTile.newPos, moveTile.jumpPos, moveTile.moveType, maxResult);
 	}
-	__syncthreads();
 }
+
+Move* GPUUtility::move_host = nullptr;
+Move* GPUUtility::move_dev = nullptr;
+boardstate_t* GPUUtility::board_dev = nullptr;
 
 void GPUUtility::initializeGPU()
 {
+	// Set limits
 	cudaDeviceSetLimit(cudaLimitDevRuntimeSyncDepth, NODE_DEPTH_GPU + 1);
-	//cudaDeviceSetLimit(cudaLimitDevRuntimePendingLaunchCount, 2048);
-	//cudaDeviceSetLimit(cudaLimitMallocHeapSize, 67108864);
-	//cudaDeviceSetLimit(cudaLimitStackSize, 1024);
-	size_t stack_limit;
-	cudaDeviceGetLimit(&stack_limit,cudaLimitStackSize);
-	printf("Stack size: %llu\n", stack_limit);
-	size_t heap_limit;
-	cudaDeviceGetLimit(&heap_limit,cudaLimitMallocHeapSize);
-	printf("Heap size: %llu\n", heap_limit);
+
+	// Allocate memory
+	move_host = new Move;
+	cudaMalloc(&move_dev, sizeof(Move));
+	cudaMalloc(&board_dev, sizeof(BoardState));
+}
+
+void GPUUtility::clear()
+{
+	// Free memory
+	cudaFree(move_dev);
+	cudaFree(board_dev);
+	cudaFree(move_host);
 }
 
 Move GPUUtility::getMove(BoardState* board)
-{	
-	Move *move_host, *move_dev;
-	move_host = new Move;
-	cudaMalloc(&move_dev, sizeof(Move));
-
-	boardstate_t *board_dev;
-	cudaMalloc(&board_dev, sizeof(BoardState));
+{
+	// Copy board to device
 	cudaMemcpy(board_dev, board, sizeof(BoardState), cudaMemcpyHostToDevice);
 
+	// Execute kernel and wait
 	getMoveKernel CUDA_KERNEL(1,32) (move_dev, board_dev);
 	cudaDeviceSynchronize();
+
+	// Copy move from device and return
 	cudaMemcpy(move_host, move_dev, sizeof(Move), cudaMemcpyDeviceToHost);
 	return *move_host;
-
-	// You forgot to free memory dummy
 }
