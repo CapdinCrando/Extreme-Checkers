@@ -47,22 +47,197 @@ __device__ void getBlackJumpsGPU(Move* jumpsOut, unsigned int& jumpCount, boards
 	unsigned int i = threadIdx.x;
 
 	boardstate_t state = board[i];
-	if(SQUARE_ISBLACK(state))
+	if(SQUARE_ISNOTEMPTY(state))
 	{
-		uint8_t cornerMin = 2;
-		if(SQUARE_ISKING(state)) cornerMin = 0;
-		for(uint8_t j = cornerMin; j < 4; j++)
+		if(SQUARE_ISBLACK(state))
 		{
-			// Get move
-			boardpos_t move = cornerTile[i][j];
-			// Check if position is invalid
-			if(move != BOARD_POS_INVALID)
+			uint8_t cornerMin = 2;
+			if(SQUARE_ISKING(state)) cornerMin = 0;
+			for(uint8_t j = cornerMin; j < 4; j++)
 			{
-				// Check if space is empty
-				boardstate_t moveState = board[move];
-				if(SQUARE_ISEMPTY(moveState))
+				// Get move
+				boardpos_t move = cornerTile[i][j];
+				// Check if position is invalid
+				if(move != BOARD_POS_INVALID)
 				{
-					if(!(SQUARE_ISBLACK(moveState)))
+					// Check if space is empty
+					boardstate_t moveState = board[move];
+					if(SQUARE_ISEMPTY(moveState))
+					{
+						if(!(SQUARE_ISBLACK(moveState)))
+						{
+							// Get jump
+							boardpos_t jump = cornerTile[move][j];
+							// Check if position is invalid
+							if(jump != BOARD_POS_INVALID)
+							{
+								// Check if space is empty
+								if(SQUARE_ISEMPTY(board[jump]))
+								{
+									// Add move to potential moves
+									uint16_t jumpIndex = atomicAdd(&jumpCount, 1U);
+									jumps[jumpIndex].oldPos = i;
+									jumps[jumpIndex].newPos = jump;
+									jumps[jumpIndex].jumpPos = move;
+									// Check for multi
+									jumps[jumpIndex].moveType = MOVE_JUMP;
+									for(uint8_t k = 0; k < 4; k++)
+									{
+										boardpos_t moveMulti = cornerTile[jump][k];
+										// Check if position is invalid
+										if(moveMulti != BOARD_POS_INVALID)
+										{
+											if(moveMulti != move)
+											{
+												boardstate_t moveStateMulti = board[moveMulti];
+												if(SQUARE_ISNOTEMPTY(moveStateMulti))
+												{
+													if(!(SQUARE_ISBLACK(moveStateMulti)))
+													{
+														boardpos_t jumpMulti = cornerTile[moveMulti][k];
+														if(jumpMulti != BOARD_POS_INVALID)
+														{
+															boardstate_t jumpStateMulti = board[jumpMulti];
+															if(SQUARE_ISEMPTY(jumpStateMulti))
+															{
+																jumps[jumpIndex].moveType = MOVE_JUMP_MULTI;
+																break;
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	__syncthreads();
+	if(i < jumpCount) jumpsOut[i] = jumps[i];
+	__syncthreads();
+}
+
+__device__ void getRedJumpsGPU(Move* jumpsOut, unsigned int& jumpCount, boardstate_t* board, boardpos_t (&cornerTile)[SQUARE_COUNT][4])
+{
+	__shared__ Move jumps[MOVE_BUFFER_SIZE];
+	unsigned int i = threadIdx.x;
+
+	boardstate_t state = board[i];
+	if(SQUARE_ISNOTEMPTY(state))
+	{
+		if(!(SQUARE_ISBLACK(state)))
+		{
+			uint8_t cornerMax = 2;
+			if(SQUARE_ISKING(state)) cornerMax = 4;
+			for(uint8_t j = 0; j < cornerMax; j++)
+			{
+				// Get move
+				boardpos_t move = cornerTile[i][j];
+				// Check if position is invalid
+				if(move != BOARD_POS_INVALID)
+				{
+					// Check if space is empty
+					boardstate_t moveState = board[move];
+					if(SQUARE_ISEMPTY(moveState))
+					{
+						if(SQUARE_ISBLACK(moveState))
+						{
+							// Get jump
+							boardpos_t jump = cornerTile[move][j];
+							// Check if position is invalid
+							if(jump != BOARD_POS_INVALID)
+							{
+								// Check if space is empty
+								if(SQUARE_ISEMPTY(board[jump]))
+								{
+									// Add move to potential moves
+									uint16_t jumpIndex = atomicAdd(&jumpCount, 1U);
+									jumps[jumpIndex].oldPos = i;
+									jumps[jumpIndex].newPos = jump;
+									jumps[jumpIndex].jumpPos = move;
+									// Check for multi
+									jumps[jumpIndex].moveType = MOVE_JUMP;
+									for(uint8_t k = 0; k < 4; k++)
+									{
+										boardpos_t moveMulti = cornerTile[jump][k];
+										// Check if position is invalid
+										if(moveMulti != BOARD_POS_INVALID)
+										{
+											if(moveMulti != move)
+											{
+												boardstate_t moveStateMulti = board[moveMulti];
+												if(SQUARE_ISNOTEMPTY(moveStateMulti))
+												{
+													if(SQUARE_ISBLACK(moveStateMulti))
+													{
+														boardpos_t jumpMulti = cornerTile[moveMulti][k];
+														if(jumpMulti != BOARD_POS_INVALID)
+														{
+															boardstate_t jumpStateMulti = board[jumpMulti];
+															if(SQUARE_ISEMPTY(jumpStateMulti))
+															{
+																jumps[jumpIndex].moveType = MOVE_JUMP_MULTI;
+																break;
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	__syncthreads();
+	if(i < jumpCount) jumpsOut[i] = jumps[i];
+	__syncthreads();
+}
+
+__device__ void getBlackMovesGPU(Move* movesOut, unsigned int& moveCount, boardstate_t* board, boardpos_t (&cornerTile)[SQUARE_COUNT][4])
+{
+	__shared__ Move moves[MOVE_BUFFER_SIZE];
+	__shared__ Move jumps[MOVE_BUFFER_SIZE];
+	__shared__ unsigned int jumpCount;
+	if(IS_ROOT_THREAD) jumpCount = 0;
+	__syncthreads();
+
+	unsigned int i = threadIdx.x;
+
+	boardstate_t state = board[i];
+	if(SQUARE_ISNOTEMPTY(state))
+	{
+		if(SQUARE_ISBLACK(state))
+		{
+			uint8_t cornerMin = 2;
+			if(SQUARE_ISKING(state)) cornerMin = 0;
+			for(uint8_t j = cornerMin; j < 4; j++)
+			{
+				// Get move
+				boardpos_t move = cornerTile[i][j];
+				// Check if position is invalid
+				if(move != BOARD_POS_INVALID)
+				{
+					// Check if space is empty
+					boardstate_t moveState = board[move];
+					if(SQUARE_ISEMPTY(moveState))
+					{
+						// Add move to potential moves
+						uint16_t moveIndex = atomicAdd(&moveCount, 1U);
+						moves[moveIndex].oldPos = i;
+						moves[moveIndex].newPos = move;
+						moves[moveIndex].moveType = MOVE_MOVE;
+					}
+					else if(!(SQUARE_ISBLACK(moveState)))
 					{
 						// Get jump
 						boardpos_t jump = cornerTile[move][j];
@@ -115,32 +290,51 @@ __device__ void getBlackJumpsGPU(Move* jumpsOut, unsigned int& jumpCount, boards
 		}
 	}
 	__syncthreads();
-	if(i < jumpCount) jumpsOut[i] = jumps[i];
+
+	if(jumpCount)
+	{
+		if(IS_ROOT_THREAD) moveCount = jumpCount;
+		if(i < jumpCount) movesOut[i] = jumps[i];
+	}
+	else if(i < jumpCount) movesOut[i] = moves[i];
 	__syncthreads();
 }
 
-__device__ void getRedJumpsGPU(Move* jumpsOut, unsigned int& jumpCount, boardstate_t* board, boardpos_t (&cornerTile)[SQUARE_COUNT][4])
+__device__ void getRedMovesGPU(Move* movesOut, unsigned int& moveCount, boardstate_t* board, boardpos_t (&cornerTile)[SQUARE_COUNT][4])
 {
+	__shared__ Move moves[MOVE_BUFFER_SIZE];
 	__shared__ Move jumps[MOVE_BUFFER_SIZE];
+	__shared__ unsigned int jumpCount;
+	if(IS_ROOT_THREAD) jumpCount = 0;
+	__syncthreads();
+
 	unsigned int i = threadIdx.x;
 
 	boardstate_t state = board[i];
-	if(!(SQUARE_ISBLACK(state)))
+	if(SQUARE_ISNOTEMPTY(state))
 	{
-		uint8_t cornerMax = 2;
-		if(SQUARE_ISKING(state)) cornerMax = 4;
-		for(uint8_t j = 0; j < cornerMax; j++)
+		if(!(SQUARE_ISBLACK(state)))
 		{
-			// Get move
-			boardpos_t move = cornerTile[i][j];
-			// Check if position is invalid
-			if(move != BOARD_POS_INVALID)
+			uint8_t cornerMax = 2;
+			if(SQUARE_ISKING(state)) cornerMax = 4;
+			for(uint8_t j = 0; j < cornerMax; j++)
 			{
-				// Check if space is empty
-				boardstate_t moveState = board[move];
-				if(SQUARE_ISEMPTY(moveState))
+				// Get move
+				boardpos_t move = cornerTile[i][j];
+				// Check if position is invalid
+				if(move != BOARD_POS_INVALID)
 				{
-					if(SQUARE_ISBLACK(moveState))
+					// Check if space is empty
+					boardstate_t moveState = board[move];
+					if(SQUARE_ISEMPTY(moveState))
+					{
+						// Add move to potential moves
+						uint16_t moveIndex = atomicAdd(&moveCount, 1U);
+						moves[moveIndex].oldPos = i;
+						moves[moveIndex].newPos = move;
+						moves[moveIndex].moveType = MOVE_MOVE;
+					}
+					else if(SQUARE_ISBLACK(moveState))
 					{
 						// Get jump
 						boardpos_t jump = cornerTile[move][j];
@@ -179,188 +373,6 @@ __device__ void getRedJumpsGPU(Move* jumpsOut, unsigned int& jumpCount, boardsta
 															jumps[jumpIndex].moveType = MOVE_JUMP_MULTI;
 															break;
 														}
-													}
-												}
-											}
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-	__syncthreads();
-	if(i < jumpCount) jumpsOut[i] = jumps[i];
-	__syncthreads();
-}
-
-__device__ void getBlackMovesGPU(Move* movesOut, unsigned int& moveCount, boardstate_t* board, boardpos_t (&cornerTile)[SQUARE_COUNT][4])
-{
-	__shared__ Move moves[MOVE_BUFFER_SIZE];
-	__shared__ Move jumps[MOVE_BUFFER_SIZE];
-	__shared__ unsigned int jumpCount;
-	if(IS_ROOT_THREAD) jumpCount = 0;
-	__syncthreads();
-
-	unsigned int i = threadIdx.x;
-
-	boardstate_t state = board[i];
-	if(SQUARE_ISBLACK(state))
-	{
-		uint8_t cornerMin = 2;
-		if(SQUARE_ISKING(state)) cornerMin = 0;
-		for(uint8_t j = cornerMin; j < 4; j++)
-		{
-			// Get move
-			boardpos_t move = cornerTile[i][j];
-			// Check if position is invalid
-			if(move != BOARD_POS_INVALID)
-			{
-				// Check if space is empty
-				boardstate_t moveState = board[move];
-				if(SQUARE_ISEMPTY(moveState))
-				{
-					// Add move to potential moves
-					uint16_t moveIndex = atomicAdd(&moveCount, 1U);
-					moves[moveIndex].oldPos = i;
-					moves[moveIndex].newPos = move;
-					moves[moveIndex].moveType = MOVE_MOVE;
-				}
-				else if(!(SQUARE_ISBLACK(moveState)))
-				{
-					// Get jump
-					boardpos_t jump = cornerTile[move][j];
-					// Check if position is invalid
-					if(jump != BOARD_POS_INVALID)
-					{
-						// Check if space is empty
-						if(SQUARE_ISEMPTY(board[jump]))
-						{
-							// Add move to potential moves
-							uint16_t jumpIndex = atomicAdd(&jumpCount, 1U);
-							jumps[jumpIndex].oldPos = i;
-							jumps[jumpIndex].newPos = jump;
-							jumps[jumpIndex].jumpPos = move;
-							// Check for multi
-							jumps[jumpIndex].moveType = MOVE_JUMP;
-							for(uint8_t k = 0; k < 4; k++)
-							{
-								boardpos_t moveMulti = cornerTile[jump][k];
-								// Check if position is invalid
-								if(moveMulti != BOARD_POS_INVALID)
-								{
-									if(moveMulti != move)
-									{
-										boardstate_t moveStateMulti = board[moveMulti];
-										if(SQUARE_ISNOTEMPTY(moveStateMulti))
-										{
-											if(!(SQUARE_ISBLACK(moveStateMulti)))
-											{
-												boardpos_t jumpMulti = cornerTile[moveMulti][k];
-												if(jumpMulti != BOARD_POS_INVALID)
-												{
-													boardstate_t jumpStateMulti = board[jumpMulti];
-													if(SQUARE_ISEMPTY(jumpStateMulti))
-													{
-														jumps[jumpIndex].moveType = MOVE_JUMP_MULTI;
-														break;
-													}
-												}
-											}
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-	__syncthreads();
-
-	if(jumpCount)
-	{
-		if(IS_ROOT_THREAD) moveCount = jumpCount;
-		if(i < jumpCount) movesOut[i] = jumps[i];
-	}
-	else if(i < jumpCount) movesOut[i] = moves[i];
-	__syncthreads();
-}
-
-__device__ void getRedMovesGPU(Move* movesOut, unsigned int& moveCount, boardstate_t* board, boardpos_t (&cornerTile)[SQUARE_COUNT][4])
-{
-	__shared__ Move moves[MOVE_BUFFER_SIZE];
-	__shared__ Move jumps[MOVE_BUFFER_SIZE];
-	__shared__ unsigned int jumpCount;
-	if(IS_ROOT_THREAD) jumpCount = 0;
-	__syncthreads();
-
-	unsigned int i = threadIdx.x;
-
-	boardstate_t state = board[i];
-	if(!(SQUARE_ISBLACK(state)))
-	{
-		uint8_t cornerMax = 2;
-		if(SQUARE_ISKING(state)) cornerMax = 4;
-		for(uint8_t j = 0; j < cornerMax; j++)
-		{
-			// Get move
-			boardpos_t move = cornerTile[i][j];
-			// Check if position is invalid
-			if(move != BOARD_POS_INVALID)
-			{
-				// Check if space is empty
-				boardstate_t moveState = board[move];
-				if(SQUARE_ISEMPTY(moveState))
-				{
-					// Add move to potential moves
-					uint16_t moveIndex = atomicAdd(&moveCount, 1U);
-					moves[moveIndex].oldPos = i;
-					moves[moveIndex].newPos = move;
-					moves[moveIndex].moveType = MOVE_MOVE;
-				}
-				else if(SQUARE_ISBLACK(moveState))
-				{
-					// Get jump
-					boardpos_t jump = cornerTile[move][j];
-					// Check if position is invalid
-					if(jump != BOARD_POS_INVALID)
-					{
-						// Check if space is empty
-						if(SQUARE_ISEMPTY(board[jump]))
-						{
-							// Add move to potential moves
-							uint16_t jumpIndex = atomicAdd(&jumpCount, 1U);
-							jumps[jumpIndex].oldPos = i;
-							jumps[jumpIndex].newPos = jump;
-							jumps[jumpIndex].jumpPos = move;
-							// Check for multi
-							jumps[jumpIndex].moveType = MOVE_JUMP;
-							for(uint8_t k = 0; k < 4; k++)
-							{
-								boardpos_t moveMulti = cornerTile[jump][k];
-								// Check if position is invalid
-								if(moveMulti != BOARD_POS_INVALID)
-								{
-									if(moveMulti != move)
-									{
-										boardstate_t moveStateMulti = board[moveMulti];
-										if(SQUARE_ISNOTEMPTY(moveStateMulti))
-										{
-											if(SQUARE_ISBLACK(moveStateMulti))
-											{
-												boardpos_t jumpMulti = cornerTile[moveMulti][k];
-												if(jumpMulti != BOARD_POS_INVALID)
-												{
-													boardstate_t jumpStateMulti = board[jumpMulti];
-													if(SQUARE_ISEMPTY(jumpStateMulti))
-													{
-														jumps[jumpIndex].moveType = MOVE_JUMP_MULTI;
-														break;
 													}
 												}
 											}
@@ -566,7 +578,7 @@ __global__ void evalBlackMoveKernel(result_gpu_t* result, boardstate_t* board, M
 	// Execute Move (if root)
 	if(IS_ROOT_THREAD)
 	{
-		moveTile = oldMoves[threadIdx.y];
+		moveTile = oldMoves[blockIdx.x];
 		boardTile[moveTile.newPos] = boardTile[moveTile.oldPos];
 		if(MOVE_ISJUMP(moveTile)) boardTile[moveTile.oldPos] = SQUARE_EMPTY;
 
@@ -587,29 +599,33 @@ __global__ void evalBlackMoveKernel(result_gpu_t* result, boardstate_t* board, M
 	if(evalBoardSquareGPU(result, boardTile, cornerTile)) return;
 	if(depth == NODE_DEPTH_GPU) return;
 
-	Move* moves;
-	result_gpu_t* results;
-	boardstate_t* newBoard;
+	__shared__ Move moves[MOVE_BUFFER_SIZE];
+	__shared__ Move* moves_d;
+	__shared__ result_gpu_t* results;
+	__shared__ boardstate_t* newBoard;
 	if(IS_ROOT_THREAD)
 	{
-		cudaMalloc(&moves, MOVE_BUFFER_SIZE*sizeof(Move));
+		cudaMalloc(&moves_d, MOVE_BUFFER_SIZE*sizeof(Move));
 		cudaMalloc(&newBoard, SQUARE_COUNT*sizeof(boardstate_t));
 	}
 	__syncthreads();
+	newBoard[x] = boardTile[x];
+
 	if(moveTile.moveType == MOVE_JUMP_MULTI)
 	{
 		// Create moves
-		getBlackJumpsGPU(moves, moveCount, newBoard, cornerTile);
+		getBlackJumpsGPU(moves, moveCount, boardTile, cornerTile);
 		if(moveCount == 0)
 		{
-			getBlackMovesGPU(moves, moveCount, newBoard, cornerTile);
+			getBlackMovesGPU(moves, moveCount, boardTile, cornerTile);
 		}
 
 		// Evaluate Moves (recursive)
+		moves_d[x] = moves[x];
 		if(IS_ROOT_THREAD)
 		{
 			cudaMalloc(&results, moveCount*sizeof(results));
-			evalBlackMoveKernel CUDA_KERNEL(moveCount, SQUARE_COUNT) (results, newBoard, moves, depth + 1);
+			evalBlackMoveKernel CUDA_KERNEL(moveCount, SQUARE_COUNT) (results, newBoard, moves_d, depth + 1);
 			cudaDeviceSynchronize();
 			cudaFree(moves);
 			cudaFree(newBoard);
@@ -631,9 +647,12 @@ __global__ void evalBlackMoveKernel(result_gpu_t* result, boardstate_t* board, M
 	else
 	{
 		// Create moves
-		getRedMovesGPU(moves, moveCount, newBoard, cornerTile);
+		getRedMovesGPU(moves, moveCount, boardTile, cornerTile);
+		printf("Possible Move: %i,%i,%i,%i\n", moves[x].oldPos, moves[x].newPos, moves[x].jumpPos, moves[x].moveType);
 
 		// Evaluate Moves (recursive)
+		moves_d[x] = moves[x];
+		//printf("Possible Move: %i,%i,%i,%i\n", moves[x].oldPos, moves[x].newPos, moves[x].jumpPos, moves[x].moveType);
 		if(IS_ROOT_THREAD)
 		{
 			cudaMalloc(&results, moveCount*sizeof(results));
@@ -657,7 +676,7 @@ __global__ void evalBlackMoveKernel(result_gpu_t* result, boardstate_t* board, M
 	__syncthreads();
 	if(IS_ROOT_THREAD)
 	{
-		*result = results[resultIndex];
+		result[blockIdx.x] = results[resultIndex];
 		cudaFree(results);
 	}
 }
@@ -684,7 +703,7 @@ __global__ void evalRedMoveKernel(result_gpu_t* result, boardstate_t* board, Mov
 	// Execute Move (if root)
 	if(IS_ROOT_THREAD)
 	{
-		moveTile = oldMoves[threadIdx.y];
+		moveTile = oldMoves[blockIdx.x];
 		boardTile[moveTile.newPos] = boardTile[moveTile.oldPos];
 		if(MOVE_ISJUMP(moveTile)) boardTile[moveTile.oldPos] = SQUARE_EMPTY;
 
@@ -705,22 +724,23 @@ __global__ void evalRedMoveKernel(result_gpu_t* result, boardstate_t* board, Mov
 	if(evalBoardSquareGPU(result, boardTile, cornerTile)) return;
 	if(depth == NODE_DEPTH_GPU) return;
 
-	Move* moves;
-	result_gpu_t* results;
-	boardstate_t* newBoard;
+	__shared__ Move* moves;
+	__shared__ result_gpu_t* results;
+	__shared__ boardstate_t* newBoard;
 	if(IS_ROOT_THREAD)
 	{
 		cudaMalloc(&moves, MOVE_BUFFER_SIZE*sizeof(Move));
 		cudaMalloc(&newBoard, SQUARE_COUNT*sizeof(boardstate_t));
 	}
 	__syncthreads();
+	newBoard[x] = boardTile[x];
 	if(moveTile.moveType == MOVE_JUMP_MULTI)
 	{
 		// Create moves
-		getRedJumpsGPU(moves, moveCount, newBoard, cornerTile);
+		getRedJumpsGPU(moves, moveCount, boardTile, cornerTile);
 		if(moveCount == 0)
 		{
-			getRedMovesGPU(moves, moveCount, newBoard, cornerTile);
+			getRedMovesGPU(moves, moveCount, boardTile, cornerTile);
 		}
 
 		// Evaluate Moves (recursive)
@@ -749,7 +769,7 @@ __global__ void evalRedMoveKernel(result_gpu_t* result, boardstate_t* board, Mov
 	else
 	{
 		// Create moves
-		getBlackMovesGPU(moves, moveCount, newBoard, cornerTile);
+		getBlackMovesGPU(moves, moveCount, boardTile, cornerTile);
 
 		// Evaluate Moves (recursive)
 		if(IS_ROOT_THREAD)
@@ -775,7 +795,7 @@ __global__ void evalRedMoveKernel(result_gpu_t* result, boardstate_t* board, Mov
 	__syncthreads();
 	if(IS_ROOT_THREAD)
 	{
-		*result = results[resultIndex];
+		result[blockIdx.x] = results[resultIndex];
 		cudaFree(results);
 	}
 }
@@ -787,7 +807,7 @@ __global__ void getMoveKernel(Move* move, boardstate_t* board)
 	__shared__ int maxResult;
 	__shared__ uint16_t maxIndex;
 	__shared__ unsigned int moveCount;
-	Move* moves;
+	__shared__ Move* moves;
 	if(IS_ROOT_THREAD)
 	{
 		moveCount = 0;
@@ -826,12 +846,14 @@ __global__ void getMoveKernel(Move* move, boardstate_t* board)
 		return;
 	}
 
-	result_gpu_t* results;
+	__shared__ result_gpu_t* results;
 	if(IS_ROOT_THREAD)
 	{
 		cudaMalloc(&results, moveCount*sizeof(results));
+		printf("Possible move count: %i\n", moveCount);
 		evalBlackMoveKernel CUDA_KERNEL(moveCount, SQUARE_COUNT) (results, board, moves, 0);
 		cudaDeviceSynchronize();
+		printf("%i\n", 0);
 		maxResult = RESULT_RED_WIN;
 		maxIndex = 0;
 	}
@@ -840,12 +862,12 @@ __global__ void getMoveKernel(Move* move, boardstate_t* board)
 	// Pick result
 	if(x < moveCount)
 	{
-		 atomicMax(&maxResult, results[x]);
-		 __syncthreads();
-		 if(maxResult == results[x])
-		 {
-			 maxIndex = x;
-		 }
+		atomicMax(&maxResult, results[x]);
+		__syncthreads();
+		if(maxResult == results[x])
+		{
+			maxIndex = x;
+		}
 	}
 	__syncthreads();
 	if(IS_ROOT_THREAD)
@@ -859,6 +881,7 @@ __global__ void getMoveKernel(Move* move, boardstate_t* board)
 		}
 		else previousMultiJumpPosGPU = -1;
 		*move = moveTile;
+		printf("Selected Move: %i,%i,%i,%i\n", moveTile.oldPos, moveTile.newPos, moveTile.jumpPos, moveTile.moveType);
 	}
 }
 
@@ -873,6 +896,6 @@ Move GPUUtility::getMove(BoardState* board)
 	cudaMemcpy(board_dev, board, sizeof(BoardState), cudaMemcpyHostToDevice);
 
 	getMoveKernel CUDA_KERNEL(1,32) (move_dev, board_dev);
-	cudaMemcpy(move_host, move_dev, sizeof(result_gpu_t), cudaMemcpyDeviceToHost);
+	cudaMemcpy(move_host, move_dev, sizeof(Move), cudaMemcpyDeviceToHost);
 	return *move_host;
 }
