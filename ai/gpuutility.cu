@@ -677,6 +677,8 @@ __global__ void evalBlackMoveKernel(result_gpu_t* result, boardstate_t* board, M
 			cudaMalloc(&results, moveCount*sizeof(result_gpu_t));
 			evalRedMoveKernel CUDA_KERNEL(moveCount, SQUARE_COUNT) (results, newBoard, moves, depth + 1);
 			cudaDeviceSynchronize();
+			cudaFree(moves);
+			cudaFree(newBoard);
 			resultVal = RESULT_BLACK_WIN;
 		}
 		__syncthreads();
@@ -808,6 +810,8 @@ __global__ void evalRedMoveKernel(result_gpu_t* result, boardstate_t* board, Mov
 			cudaMalloc(&results, moveCount*sizeof(result_gpu_t));
 			evalBlackMoveKernel CUDA_KERNEL(moveCount, SQUARE_COUNT) (results, newBoard, moves, depth + 1);
 			cudaDeviceSynchronize();
+			cudaFree(moves);
+			cudaFree(newBoard);
 			resultVal = RESULT_RED_WIN;
 		}
 		__syncthreads();
