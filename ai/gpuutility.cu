@@ -629,7 +629,7 @@ __global__ void evalBlackMoveKernel(result_gpu_t* result, boardstate_t* board, M
 		if(x < 4) getBlackJumpsGPU(moves, moveCount, moveTile.newPos, boardTile, cornerTile);
 		if(moveCount == 0)
 		{
-			//getBlackMovesGPU(moves, moveCount, boardTile, cornerTile);
+			getBlackMovesGPU(moves, moveCount, boardTile, cornerTile);
 		}
 
 		// Evaluate Moves (recursive)
@@ -754,7 +754,7 @@ __global__ void evalRedMoveKernel(result_gpu_t* result, boardstate_t* board, Mov
 		if(x < 4) getRedJumpsGPU(moves, moveCount, moveTile.newPos, boardTile, cornerTile);
 		if(moveCount == 0)
 		{
-			//getRedMovesGPU(moves, moveCount, boardTile, cornerTile);
+			getRedMovesGPU(moves, moveCount, boardTile, cornerTile);
 		}
 
 		// Evaluate Moves (recursive)
@@ -866,7 +866,7 @@ __global__ void getMoveKernel(Move* move, boardstate_t* board)
 	{
 		cudaMalloc(&results, moveCount*sizeof(result_gpu_t));
 		//printf("Possible move count: %i\n", moveCount);
-		evalBlackMoveKernel CUDA_KERNEL(1, SQUARE_COUNT) (results, board, moves, 0);
+		evalBlackMoveKernel CUDA_KERNEL(moveCount, SQUARE_COUNT) (results, board, moves, 0);
 		cudaDeviceSynchronize();
 		//printf("Child Kernels finished\n");
 		maxResult = RESULT_RED_WIN;
@@ -898,13 +898,17 @@ __global__ void getMoveKernel(Move* move, boardstate_t* board)
 		}
 		else previousMultiJumpPosGPU = -1;
 		*move = moveTile;
-		//printf("Selected Move: %i,%i,%i,%i with a result of %i\n", moveTile.oldPos, moveTile.newPos, moveTile.jumpPos, moveTile.moveType, maxResult);
+		printf("Selected Move: %i,%i,%i,%i with a result of %i\n", moveTile.oldPos, moveTile.newPos, moveTile.jumpPos, moveTile.moveType, maxResult);
 	}
 }
 
 void GPUUtility::initializeGPU()
 {
 	cudaDeviceSetLimit(cudaLimitDevRuntimeSyncDepth, NODE_DEPTH_GPU);
+	cudaDeviceSetLimit(cudaLimitStackSize, 1024);
+	size_t stack_limit;
+	cudaDeviceGetLimit(&stack_limit,cudaLimitStackSize);
+	printf("Stack size: %llu\n", stack_limit);
 }
 
 Move GPUUtility::getMove(BoardState* board)
