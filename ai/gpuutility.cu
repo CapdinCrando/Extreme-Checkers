@@ -413,6 +413,7 @@ __global__ void evalBlackMoveKernel(result_gpu_t* result, boardstate_t* board, M
 	if(depth == NODE_DEPTH_GPU) return;
 
 	Move moves[MOVE_BUFFER_SIZE];
+	boardstate_t newBoard[SQUARE_COUNT];
 	result_gpu_t* results;
 	if(moveTile.moveType == MOVE_JUMP_MULTI)
 	{
@@ -427,7 +428,7 @@ __global__ void evalBlackMoveKernel(result_gpu_t* result, boardstate_t* board, M
 		if(IS_ROOT_THREAD)
 		{
 			cudaMalloc(&results, moveCount*sizeof(results));
-			evalBlackMoveKernel CUDA_KERNEL(moveCount, SQUARE_COUNT) (results, board, moves, 0);
+			evalBlackMoveKernel CUDA_KERNEL(moveCount, SQUARE_COUNT) (results, newBoard, moves, 0);
 			cudaDeviceSynchronize();
 			resultVal = RESULT_RED_WIN;
 		}
@@ -440,7 +441,7 @@ __global__ void evalBlackMoveKernel(result_gpu_t* result, boardstate_t* board, M
 			__syncthreads();
 			if(resultVal == results[threadIdx.x])
 			{
-
+				resultIndex = x;
 			}
 		}
 	}
@@ -466,7 +467,7 @@ __global__ void evalBlackMoveKernel(result_gpu_t* result, boardstate_t* board, M
 			__syncthreads();
 			if(resultVal == results[threadIdx.x])
 			{
-
+				resultIndex = x;
 			}
 		}
 	}
