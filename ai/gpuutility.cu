@@ -550,7 +550,6 @@ __device__ bool evalBoardSquareGPU(result_gpu_t* resultOut, boardstate_t* board,
 			}
 		}
 		if(!retVal) *resultOut = blackCount - redCount;
-		printf("Eval result: #%i , B%i , R%i\n", *resultOut, blackCount, redCount);
 	}
 	__syncthreads();
 	return retVal;
@@ -567,6 +566,7 @@ __global__ void evalBlackMoveKernel(result_gpu_t* result, boardstate_t* board, M
 	__shared__ unsigned int moveCount;
 	__shared__ int resultVal;
 	__shared__ int resultIndex;
+	result_gpu_t* resultOut = &result[blockIdx.x];
 	unsigned int x = threadIdx.x;
 
 	// Copy board
@@ -600,7 +600,7 @@ __global__ void evalBlackMoveKernel(result_gpu_t* result, boardstate_t* board, M
 	__syncthreads();
 
 	// Check depth
-	if(evalBoardSquareGPU(result, boardTile, cornerTile)) return;
+	if(evalBoardSquareGPU(resultOut, boardTile, cornerTile)) return;
 	//if(IS_ROOT_THREAD) printf("Result @ D%i: %i\n", depth, *result);
 	if(depth == NODE_DEPTH_GPU) return;
 
@@ -666,6 +666,7 @@ __global__ void evalBlackMoveKernel(result_gpu_t* result, boardstate_t* board, M
 		// Pick min result
 		if(threadIdx.x < moveCount)
 		{
+			//printf("Result from Red: %i\n", results[threadIdx.x]);
 			atomicMin(&resultVal, results[threadIdx.x]);
 			__syncthreads();
 			if(resultVal == results[threadIdx.x])
@@ -677,7 +678,7 @@ __global__ void evalBlackMoveKernel(result_gpu_t* result, boardstate_t* board, M
 	__syncthreads();
 	if(IS_ROOT_THREAD)
 	{
-		result[blockIdx.x] = results[resultIndex];
+		*resultOut = results[resultIndex];
 		//printf("Selected result @D%i: %i <- %i\n", x, result[blockIdx.x], results[resultIndex]);
 		cudaFree(results);
 	}
@@ -691,6 +692,7 @@ __global__ void evalRedMoveKernel(result_gpu_t* result, boardstate_t* board, Mov
 	__shared__ unsigned int moveCount;
 	__shared__ int resultVal;
 	__shared__ int resultIndex;
+	result_gpu_t* resultOut = &result[blockIdx.x];
 	unsigned int x = threadIdx.x;
 
 	// Copy board
@@ -724,8 +726,8 @@ __global__ void evalRedMoveKernel(result_gpu_t* result, boardstate_t* board, Mov
 	__syncthreads();
 
 	// Check depth
-	if(evalBoardSquareGPU(result, boardTile, cornerTile)) return;
-	//if(IS_ROOT_THREAD) printf("Result @ D%i: %i\n", depth, *result);
+	if(evalBoardSquareGPU(resultOut, boardTile, cornerTile)) return;
+	//if(IS_ROOT_THREAD) printf("Red result: %i\n", *result);
 	if(depth == NODE_DEPTH_GPU) return;
 
 	__shared__ Move* moves;
@@ -799,7 +801,7 @@ __global__ void evalRedMoveKernel(result_gpu_t* result, boardstate_t* board, Mov
 	__syncthreads();
 	if(IS_ROOT_THREAD)
 	{
-		result[blockIdx.x] = results[resultIndex];
+		*resultOut = results[resultIndex];
 		cudaFree(results);
 	}
 }
@@ -853,7 +855,7 @@ __global__ void getMoveKernel(Move* move, boardstate_t* board)
 	__shared__ result_gpu_t* results;
 	if(IS_ROOT_THREAD)
 	{
-		cudaMalloc(&results, moveCount*sizeof(results));
+		cudaMalloc(&results, moveCount*sizeof(result_gpu_t));
 		//printf("Possible move count: %i\n", moveCount);
 		evalBlackMoveKernel CUDA_KERNEL(moveCount, SQUARE_COUNT) (results, board, moves, 0);
 		cudaDeviceSynchronize();
@@ -865,13 +867,14 @@ __global__ void getMoveKernel(Move* move, boardstate_t* board)
 	// Pick result
 	if(x < moveCount)
 	{
-		printf("End result#%i: %i\n", x, results[x]);
+		//printf("End result#%i: %i\n", x, results[x]);
 		atomicMax(&maxResult, results[x]);
 		__syncthreads();
 		if(maxResult == results[x])
 		{
 			maxIndex = x;
 		}
+		__syncthreads();
 	}
 	__syncthreads();
 	if(IS_ROOT_THREAD)
@@ -885,7 +888,7 @@ __global__ void getMoveKernel(Move* move, boardstate_t* board)
 		}
 		else previousMultiJumpPosGPU = -1;
 		*move = moveTile;
-		printf("Selected Move: %i,%i,%i,%i with a result of %i\n", moveTile.oldPos, moveTile.newPos, moveTile.jumpPos, moveTile.moveType, maxResult);
+		//printf("Selected Move: %i,%i,%i,%i with a result of %i\n", moveTile.oldPos, moveTile.newPos, moveTile.jumpPos, moveTile.moveType, maxResult);
 	}
 }
 
