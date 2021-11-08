@@ -1,12 +1,12 @@
 #ifndef GAMEENGINE_H
 #define GAMEENGINE_H
 
-#include <QObject>
 #include "gameboard.h"
 #include "defines.h"
 #include "ai/aimanager.h"
 
-
+#include <QObject>
+#include <QTimer>
 
 class GameEngine : public QObject
 {
@@ -30,9 +30,10 @@ signals:
 	void executeBlackMove();
 
 private slots:
-	void handleBlackMove();
+	void calculateMove();
 
 private:
+	void handleBlackMove(Move move);
 	void move(Move move);
 	bool checkRedWin();
 	bool checkBlackWin();

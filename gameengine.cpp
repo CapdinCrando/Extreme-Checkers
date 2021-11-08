@@ -1,14 +1,23 @@
 #include "gameengine.h"
 #include "ai/gpuutility.h"
 
+#include <chrono>
+
 #ifdef QT_DEBUG
+#define PROFILING
+#endif
+
+#ifdef PROFILING
 #include <iostream>
 #endif
 
 GameEngine::GameEngine()
 {
 	aiManager = new AIManager();
-	connect(this, &GameEngine::executeBlackMove, this, &GameEngine::handleBlackMove, Qt::QueuedConnection);
+	connect(this, &GameEngine::executeBlackMove, this, &GameEngine::calculateMove, Qt::QueuedConnection);
+
+	//connect(timer, &QTimer::timeout, this, LAMBDA)
+
 }
 
 GameEngine::~GameEngine()
@@ -101,9 +110,31 @@ void GameEngine::executeRedMove(Move move)
 	emit executeBlackMove();
 }
 
-void GameEngine::handleBlackMove()
+void GameEngine::calculateMove()
 {
-	Move move = this->getAIMove();
+	auto start = std::chrono::high_resolution_clock::now();
+	Move move = aiManager->getMove(gameBoard);
+	auto stop = std::chrono::high_resolution_clock::now();
+	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start).count();
+
+#ifdef PROFILING
+	std::cout << "Black move calculated in " << duration << " us" << std::endl;
+#endif
+
+	long long remainingWait = (CALCULATE_TIME_US - duration)/1000;
+	std::cout << "Remaining time: " << remainingWait << std::endl;
+	if(remainingWait > 0)
+	{
+		QTimer::singleShot(remainingWait, [=]()
+		{
+			handleBlackMove(move);
+		});
+	}
+	else handleBlackMove(move);
+}
+
+void GameEngine::handleBlackMove(Move move)
+{
 	if(MOVE_ISINVALID(move)) return;
 
 #ifdef QT_DEBUG
