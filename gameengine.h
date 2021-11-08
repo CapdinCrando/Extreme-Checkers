@@ -27,10 +27,13 @@ signals:
 	void displayMultiJump(std::vector<Move> moves, SquareState checkerType);
 	void blackMoveFinished();
 	void gameOver(GameState gameState);
+	void executeBlackMove();
+
+private slots:
+	void handleBlackMove();
 
 private:
 	void move(Move move);
-	void executeBlackMove();
 	bool checkRedWin();
 	bool checkBlackWin();
 	void checkRedTie();

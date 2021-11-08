@@ -8,6 +8,7 @@
 GameEngine::GameEngine()
 {
 	aiManager = new AIManager();
+	connect(this, &GameEngine::executeBlackMove, this, &GameEngine::handleBlackMove, Qt::QueuedConnection);
 }
 
 GameEngine::~GameEngine()
@@ -97,10 +98,10 @@ void GameEngine::executeRedMove(Move move)
 		emit gameOver(GAME_OVER_RED_WIN);
 		return;
 	}
-	executeBlackMove();
+	emit executeBlackMove();
 }
 
-void GameEngine::executeBlackMove()
+void GameEngine::handleBlackMove()
 {
 	Move move = this->getAIMove();
 	if(MOVE_ISINVALID(move)) return;
@@ -122,7 +123,7 @@ void GameEngine::executeBlackMove()
 		gameBoard.setSquareState(move.jumpPos, SQUARE_EMPTY);
 		if(move.moveType == MOVE_JUMP_MULTI)
 		{
-			executeBlackMove();
+			emit executeBlackMove();
 		}
 		else
 		{
