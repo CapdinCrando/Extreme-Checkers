@@ -122,7 +122,7 @@ void GameEngine::calculateMove()
 #endif
 
 	long long remainingWait = (CALCULATE_TIME_US - duration)/1000;
-	std::cout << "Remaining time: " << remainingWait << std::endl;
+	//std::cout << "Remaining time: " << remainingWait << std::endl;
 	if(remainingWait > 0)
 	{
 		QTimer::singleShot(remainingWait, [=]()
