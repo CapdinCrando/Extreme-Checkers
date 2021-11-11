@@ -22,6 +22,7 @@ enum GameState : int8_t
 struct GameSettings
 {
 	unsigned char aiLevel = 0;
+	bool enableLogging = 0;
 };
 
 typedef unsigned char depth_t;

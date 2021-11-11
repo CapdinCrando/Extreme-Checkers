@@ -18,6 +18,7 @@ void SettingsDialog::handleStartGamePress()
 {
 	GameSettings settings;
 	settings.aiLevel = ui->aiSelectionBox->currentIndex();
+	settings.enableLogging = ui->loggingCheckBox->isChecked();
 	emit this->saveSettings(settings);
 	this->accept();
 }
