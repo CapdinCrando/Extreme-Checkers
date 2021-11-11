@@ -47,10 +47,6 @@ Move AIParallel::getMove(GameBoard& board)
 	else
 	{
 		moves = AIUtility::getAllBlackJumps(board, previousMultiJumpPos);
-		if(moves->empty())
-		{
-			moves = AIUtility::getAllBlackMoves(board);
-		}
 	}
 
 	if(moves->empty())

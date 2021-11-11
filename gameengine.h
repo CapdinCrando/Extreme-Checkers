@@ -1,12 +1,12 @@
 #ifndef GAMEENGINE_H
 #define GAMEENGINE_H
 
-#include <QObject>
 #include "gameboard.h"
 #include "defines.h"
 #include "ai/aimanager.h"
 
-
+#include <QObject>
+#include <QTimer>
 
 class GameEngine : public QObject
 {
@@ -27,10 +27,14 @@ signals:
 	void displayMultiJump(std::vector<Move> moves, SquareState checkerType);
 	void blackMoveFinished();
 	void gameOver(GameState gameState);
+	void executeBlackMove();
+
+private slots:
+	void calculateMove();
 
 private:
+	void handleBlackMove(Move move);
 	void move(Move move);
-	void executeBlackMove();
 	bool checkRedWin();
 	bool checkBlackWin();
 	void checkRedTie();
