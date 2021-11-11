@@ -4,6 +4,7 @@
 #include "gameboard.h"
 #include "defines.h"
 #include "ai/aimanager.h"
+#include <gamelogger.h>
 
 #include <QObject>
 #include <QTimer>
@@ -28,6 +29,8 @@ signals:
 	void blackMoveFinished();
 	void gameOver(GameState gameState);
 	void executeBlackMove();
+	void logRedMove(Move move);
+	void logBlackMove(Move move, long long moveDurationMicro);
 
 private slots:
 	void calculateMove();
@@ -44,6 +47,7 @@ private:
 	Move getAIMove();
 
 	AIManager* aiManager;
+	GameLogger* logger;
 
 	GameBoard gameBoard;
 	bool jumpExists = false;

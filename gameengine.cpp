@@ -14,15 +14,18 @@
 GameEngine::GameEngine()
 {
 	aiManager = new AIManager();
+	logger = new GameLogger();
+
 	connect(this, &GameEngine::executeBlackMove, this, &GameEngine::calculateMove, Qt::QueuedConnection);
-
-	//connect(timer, &QTimer::timeout, this, LAMBDA)
-
+	connect(this, &GameEngine::logRedMove, logger, &GameLogger::logRedMove, Qt::QueuedConnection);
+	connect(this, &GameEngine::logBlackMove, logger, &GameLogger::logBlackMove, Qt::QueuedConnection);
+	connect(this, &GameEngine::gameOver, logger, &GameLogger::logGameOver, Qt::QueuedConnection);
 }
 
 GameEngine::~GameEngine()
 {
 	delete aiManager;
+	delete logger;
 }
 
 void GameEngine::resetGame()
@@ -37,6 +40,7 @@ void GameEngine::resetGame()
 void GameEngine::saveSettings(GameSettings settings)
 {
 	aiManager->selectAI(settings.aiLevel);
+	logger->openLogFile(settings);
 
 #ifdef QT_DEBUG
 	std::cout << "Setting: " << +settings.aiLevel << std::endl;
@@ -61,6 +65,7 @@ void GameEngine::executeRedMove(Move move)
 		emit displayMove(move, gameBoard.kingPiece(move.newPos));
 	}
 	else emit displayMove(move, false);
+	emit logRedMove(move);
 
 	if(MOVE_ISJUMP(move))
 	{
@@ -117,6 +122,8 @@ void GameEngine::calculateMove()
 	Move move = aiManager->getMove(gameBoard);
 	auto stop = std::chrono::high_resolution_clock::now();
 	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start).count();
+
+	emit logBlackMove(move, duration);
 
 #ifdef PROFILING
 	std::cout << "Black move calculated in " << duration << " us" << std::endl;
