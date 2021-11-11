@@ -37,6 +37,7 @@ void GameEngine::resetGame()
 void GameEngine::saveSettings(GameSettings settings)
 {
 	aiManager->selectAI(settings.aiLevel);
+
 #ifdef QT_DEBUG
 	std::cout << "Setting: " << +settings.aiLevel << std::endl;
 #endif

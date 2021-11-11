@@ -26,6 +26,7 @@ SOURCES += \
     fakecheckeritem.cpp \
     gameboard.cpp \
     gameengine.cpp \
+	gamelogger.cpp \
     gameview.cpp \
     main.cpp \
     mainwindow.cpp \
@@ -47,6 +48,7 @@ HEADERS += \
     fakecheckeritem.h \
     gameboard.h \
     gameengine.h \
+	gamelogger.h \
     gameview.h \
     mainwindow.h \
     settingsdialog.h
