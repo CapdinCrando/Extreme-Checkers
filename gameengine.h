@@ -36,13 +36,9 @@ private slots:
 	void calculateMove();
 
 private:
+	bool checkGameOver(bool isBlackTurn);
 	void handleBlackMove(Move move);
 	void move(Move move);
-	bool checkRedWin();
-	bool checkBlackWin();
-	void checkRedTie();
-	void checkBlackTie();
-	bool checkIfRedMoveExists();
 	bool canBlackMove();
 	Move getAIMove();
 
