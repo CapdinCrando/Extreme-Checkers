@@ -48,6 +48,7 @@ private:
 
 	AIManager* aiManager;
 	GameLogger* logger;
+	GameSettings settings;
 
 	GameBoard gameBoard;
 	bool jumpExists = false;
