@@ -33,10 +33,6 @@ void AITask::run()
 		{
 			// Create moves
 			moves = AIUtility::getAllBlackJumps(board, move.newPos);
-			if(moves->empty())
-			{
-				moves = AIUtility::getAllBlackMoves(board);
-			}
 
 			// Evaluate Moves (recursive)
 			for(uint8_t i = 0; i < moves->size(); i++)
@@ -74,10 +70,6 @@ void AITask::run()
 		{
 			// Create moves
 			moves = AIUtility::getAllRedJumps(board, move.newPos);
-			if(moves->empty())
-			{
-				moves = AIUtility::getAllRedMoves(board);
-			}
 
 			// Evaluate Moves (recursive)
 			for(uint8_t i = 0; i < moves->size(); i++)
