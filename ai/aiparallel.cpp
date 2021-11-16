@@ -4,36 +4,27 @@
 
 #include <algorithm>
 
-result_t minimax(depth_t depth, Node* node, result_t alpha, result_t beta)
+result_t minimax(depth_t depth, Node* node)
 {
 	if(node->children.empty()) return node->result;
 
+	std::vector<result_t> results;
+	for(uint8_t i = 0; i < node->children.size(); i++)
+	{
+		results.push_back(minimax(depth + 1, node->children.at(i)));
+	}
+	size_t a;
 	if(node->isBlack)
 	{
-		result_t best = RESULT_BLACK_WIN;
-		for(uint8_t i = 0; i < node->children.size(); i++)
-		{
-			result_t val = minimax(depth + 1, node->children.at(i), alpha, beta);
-			best = std::min(best, val);
-			beta = std::min(beta, best);
-
-			if(beta <= alpha) break;
-		}
-		return best;
+		auto iterator = std::max_element(std::begin(results), std::end(results));
+		a = std::distance(results.begin(), iterator);
 	}
 	else
 	{
-		result_t best = RESULT_RED_WIN;
-		for(uint8_t i = 0; i < node->children.size(); i++)
-		{
-			result_t val = minimax(depth + 1, node->children.at(i), alpha, beta);
-			best = std::max(best, val);
-			alpha = std::max(alpha, best);
-
-			if(beta <= alpha) break;
-		}
-		return best;
+		auto iterator = std::min_element(std::begin(results), std::end(results));
+		a = std::distance(results.begin(), iterator);
 	}
+	return results[a];
 }
 
 Move AIParallel::getMove(GameBoard& board)
@@ -70,18 +61,10 @@ Move AIParallel::getMove(GameBoard& board)
 	QThreadPool::globalInstance()->waitForDone();
 
 	// Execute Minimax Algorithm
-	result_t best = RESULT_BLACK_WIN;
-	result_t alpha = RESULT_RED_WIN;
-	result_t beta = RESULT_BLACK_WIN;
 	std::vector<result_t> results;
 	for(uint8_t i = 0; i < children.size(); i++)
 	{
-		result_t result = minimax(0, children.at(i), alpha, beta);
-		results.push_back(result);
-		best = std::min(best, result);
-		beta = std::min(beta, best);
-
-		if(beta <= alpha) break;
+		results.push_back(minimax(0, children.at(i)));
 	}
 
 	// Free memory
