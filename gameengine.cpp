@@ -116,9 +116,19 @@ void GameEngine::executeRedMove(Move move)
 void GameEngine::calculateMove()
 {
 	auto start = std::chrono::high_resolution_clock::now();
-	Move move = aiManager->getMove(gameBoard);
+	Move move;
+	try
+	{
+		move = aiManager->getMove(gameBoard);
+	}
+	catch (const std::exception& e)
+	{
+		emit printError(e);
+		return;
+	}
 	auto stop = std::chrono::high_resolution_clock::now();
 	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start).count();
+
 
 	emit logBlackMove(move, duration);
 

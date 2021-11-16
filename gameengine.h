@@ -31,6 +31,7 @@ signals:
 	void executeBlackMove();
 	void logRedMove(Move move);
 	void logBlackMove(Move move, long long moveDurationMicro);
+	void printError(const std::exception& e);
 
 private slots:
 	void calculateMove();
