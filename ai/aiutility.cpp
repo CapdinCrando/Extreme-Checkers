@@ -128,7 +128,7 @@ std::vector<Move>* AIUtility::getAllBlackJumps(GameBoard &board, boardpos_t pos)
 								m.moveType = MOVE_JUMP;
 								for(uint8_t k = 0; k < 4; k++)
 								{
-									boardpos_t moveMulti = cornerList[move][k];
+									boardpos_t moveMulti = cornerList[jump][k];
 									// Check if position is invalid
 									if(moveMulti != BOARD_POS_INVALID)
 									{
@@ -292,7 +292,7 @@ std::vector<Move>* AIUtility::getAllRedJumps(GameBoard &board, boardpos_t pos)
 								m.moveType = MOVE_JUMP;
 								for(uint8_t k = 0; k < 4; k++)
 								{
-									boardpos_t moveMulti = cornerList[move][k];
+									boardpos_t moveMulti = cornerList[jump][k];
 									// Check if position is invalid
 									if(moveMulti != BOARD_POS_INVALID)
 									{
