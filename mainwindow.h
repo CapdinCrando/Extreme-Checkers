@@ -16,6 +16,7 @@ class MainWindow : public QMainWindow
 
 public slots:
 	void gameOver(GameState gameState);
+	void displayError(const std::exception& e);
 
 public:
     MainWindow(QWidget *parent = nullptr);
