@@ -22,6 +22,7 @@ public:
 
 signals:
 	void gameOver(GameState gameState);
+	void printError(const std::exception& e);
 
 public slots:
 	void onCheckerSelected(boardpos_t pos, SquareState state);

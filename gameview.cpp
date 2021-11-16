@@ -19,6 +19,7 @@ GameView::GameView(QWidget *parent) : QGraphicsView(parent)
 	connect(&gameEngine, &GameEngine::displayMove, this, &GameView::displayMove);
 	connect(&gameEngine, &GameEngine::displayMultiJump, this, &GameView::drawPossibleMoves);
 	connect(&gameEngine, &GameEngine::gameOver, this, &GameView::gameOver);
+	connect(&gameEngine, &GameEngine::printError, this, &GameView::printError);
 
 	this->show();
 }
