@@ -174,13 +174,14 @@ void GameEngine::handleBlackMove(Move move)
 		else
 		{
 			emit blackMoveFinished();
+			if(checkGameOver(true)) return;
 		}
 	}
 	else
 	{
 		emit blackMoveFinished();
+		if(checkGameOver(true)) return;
 	}
-	if(checkGameOver(true)) return;
 }
 
 bool GameEngine::checkGameOver(bool isBlackTurn)
