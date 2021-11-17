@@ -5,7 +5,7 @@
 #include <vector>
 
 #define NODE_DEPTH_MINIMAX 7
-#define NODE_DEPTH_PARALLEL 7
+#define NODE_DEPTH_PARALLEL 8
 #define NODE_DEPTH_GPU 6
 
 #define CALCULATE_TIME_US 500000
