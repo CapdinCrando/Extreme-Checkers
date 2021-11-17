@@ -4,7 +4,6 @@
 #include <QThreadPool>
 
 #include "ai.h"
-#include "node.h"
 
 class AIParallel : public AI
 {

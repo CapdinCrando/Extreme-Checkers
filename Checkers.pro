@@ -21,7 +21,6 @@ SOURCES += \
     ai/airandom.cpp \
     ai/aitask.cpp \
     ai/aiutility.cpp \
-	ai/node.cpp \
     checkeritem.cpp \
     fakecheckeritem.cpp \
     gameboard.cpp \
@@ -42,7 +41,6 @@ HEADERS += \
     ai/aitask.h \
     ai/aiutility.h \
 	ai/gpuutility.h \
-    ai/node.h \
     checkeritem.h \
     defines.h \
     fakecheckeritem.h \

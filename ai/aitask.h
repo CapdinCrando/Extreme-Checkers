@@ -4,7 +4,7 @@
 #include <QRunnable>
 #include <QThreadPool>
 
-#include "node.h"
+#include "defines.h"
 #include "gameboard.h"
 
 class AITask : public QRunnable
