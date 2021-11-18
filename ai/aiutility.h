@@ -1,8 +1,8 @@
 #ifndef AIUTILITY_H
 #define AIUTILITY_H
 
-#include "defines.h"
-#include "gameboard.h"
+#include "../defines.h"
+#include "../gameboard.h"
 
 class AIUtility
 {
