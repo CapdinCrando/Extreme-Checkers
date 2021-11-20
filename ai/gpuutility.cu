@@ -7,10 +7,12 @@
 #include <stdio.h>
 
 #include <algorithm>
+#include <iostream>
 
 #include "aiutility.h"
 
 // To get rid of intellisense warnings
+
 #ifdef CUDA_EDIT
 #define CUDA_KERNEL(...)
 #define __syncthreads()
@@ -39,7 +41,7 @@ __device__ inline void gpuAssert(cudaError_t code, const char *file, int line, b
 #define gpuErrchk(ans) (ans)
 #endif
 
-#define IS_ROOT_THREAD threadIdx.x == 0
+#define IS_ROOT_THREAD threadIdx.x == 0U
 #define MOVE_BUFFER_SIZE SQUARE_COUNT
 
 __device__ boardpos_t previousMultiJumpPosGPU = -1;
@@ -425,6 +427,7 @@ __device__ bool evalBoardSquareGPU(result_gpu_t* resultOut, boardstate_t* board,
 		blackMoveFound = 0;
 		retVal = false;
 	}
+	__syncthreads();
 
 	boardpos_t pos = threadIdx.x;
 	boardstate_t state = board[pos];
@@ -506,6 +509,7 @@ __device__ bool evalBoardSquareGPU(result_gpu_t* resultOut, boardstate_t* board,
 		}
 	}
 	__syncthreads();
+	printf("%i\n", pos);
 
 	if(IS_ROOT_THREAD)
 	{
@@ -567,11 +571,10 @@ __device__ bool evalBoardSquareGPU(result_gpu_t* resultOut, boardstate_t* board,
 }
 
 // Definition
-__device__ void evalRedMoveKernel(result_gpu_t* resultOut, boardstate_t* board, Move* oldMoves, depth_t depth);
+__device__ void evalRedMoveKernel(result_gpu_t* resultOut, boardstate_t* board, Move* oldMoves, depth_t depth, boardpos_t (&cornerTile)[SQUARE_COUNT][4]);
 
-__device__ void evalBlackMoveKernel(result_gpu_t* resultOut, boardstate_t* board, Move* oldMoves, depth_t depth)
+__device__ void evalBlackMoveKernel(result_gpu_t* resultOut, boardstate_t* board, Move* oldMoves, depth_t depth, boardpos_t (&cornerTile)[SQUARE_COUNT][4])
 {
-	__shared__ boardpos_t cornerTile[SQUARE_COUNT][4];
 	__shared__ boardstate_t boardTile[SQUARE_COUNT];
 	__shared__ Move moveTile;
 	__shared__ unsigned int moveCount;
@@ -581,49 +584,46 @@ __device__ void evalBlackMoveKernel(result_gpu_t* resultOut, boardstate_t* board
 
 	// Copy board
 	boardTile[x] = board[x];
-
-	// Copy cornerTile for faster calculations
-	cornerTile[x][0] = cornerListDev[x][0];
-	cornerTile[x][1] = cornerListDev[x][1];
-	cornerTile[x][2] = cornerListDev[x][2];
-	cornerTile[x][3] = cornerListDev[x][3];
-
-	// Execute Move (if root)
-	if(IS_ROOT_THREAD)
-	{
-		moveTile = *oldMoves;
-		boardTile[moveTile.newPos] = boardTile[moveTile.oldPos];
-		boardTile[moveTile.oldPos] = SQUARE_EMPTY;
-		if(MOVE_ISJUMP(moveTile)) boardTile[moveTile.jumpPos] = SQUARE_EMPTY;
-
-		// Check for king
-		if(moveTile.newPos > 27)
-		{
-			if(SQUARE_ISNOTEMPTY(boardTile[moveTile.newPos]))
-			{
-				boardTile[moveTile.newPos] |= 0x1;
-			}
-		}
-		moveCount = 0;
-		resultIndex = -1;
-	}
+	moveTile = *oldMoves;
+	boardTile[moveTile.newPos] = boardTile[moveTile.oldPos];
 	__syncthreads();
+
+	// Check for king
+	boardTile[moveTile.oldPos] = SQUARE_EMPTY;
+	if(moveTile.newPos > 27)
+	{
+		if(SQUARE_ISNOTEMPTY(boardTile[moveTile.newPos]))
+		{
+			boardTile[moveTile.newPos] |= 0x1;
+		}
+	}
+	if(MOVE_ISJUMP(moveTile)) boardTile[moveTile.jumpPos] = SQUARE_EMPTY;
+	moveCount = 0;
+	resultIndex = -1;
+	__syncthreads();
+
 
 	// Check depth
 	if(evalBoardSquareGPU(resultOut, boardTile, cornerTile)) return;
-	if(depth == NODE_DEPTH_GPU) return;
+	if(depth == NODE_DEPTH_GPU)
+	{
+		return;
+	}
 
 	__shared__ Move* moves;
 	__shared__ result_gpu_t* results;
-	__shared__ boardstate_t* newBoard;
+	//__shared__ boardstate_t* newBoard;
 	if(IS_ROOT_THREAD)
 	{
 		gpuErrchk(cudaMalloc(&moves, MOVE_BUFFER_SIZE*sizeof(Move)));
-		gpuErrchk(cudaMalloc(&newBoard, SQUARE_COUNT*sizeof(boardstate_t)));
+		//gpuErrchk(cudaMalloc(&newBoard, SQUARE_COUNT*sizeof(boardstate_t)));
 	}
-	__syncthreads();
-	newBoard[x] = boardTile[x];
-	__syncthreads();
+	//__syncthreads();
+	//boardTile[x];
+	//printf("AHHHH\n");
+	//newBoard[x] = boardTile[x];
+	//printf("AHHHH\n");
+	//__syncthreads();
 
 	if(moveTile.moveType == MOVE_JUMP_MULTI)
 	{
@@ -638,14 +638,14 @@ __device__ void evalBlackMoveKernel(result_gpu_t* resultOut, boardstate_t* board
 		__syncthreads();
 		for(uint8_t i = 0; i < moveCount; i++)
 		{
-			evalBlackMoveKernel(&results[i], newBoard, &moves[i], depth + 1);
+			evalBlackMoveKernel(&results[i], boardTile, &moves[i], depth + 1, cornerTile);
 		}
 
 		__syncthreads();
 		if(IS_ROOT_THREAD)
 		{
 			cudaFree(moves);
-			cudaFree(newBoard);
+			//cudaFree(newBoard);
 			resultVal = RESULT_RED_WIN;
 		}
 		__syncthreads();
@@ -674,14 +674,14 @@ __device__ void evalBlackMoveKernel(result_gpu_t* resultOut, boardstate_t* board
 		__syncthreads();
 		for(uint8_t i = 0; i < moveCount; i++)
 		{
-			evalRedMoveKernel(&results[i], newBoard, &moves[i], depth + 1);
+			evalRedMoveKernel(&results[i], boardTile, &moves[i], depth + 1, cornerTile);
 		}
 
 		__syncthreads();
 		if(IS_ROOT_THREAD)
 		{
 			cudaFree(moves);
-			cudaFree(newBoard);
+			//cudaFree(newBoard);
 			resultVal = RESULT_BLACK_WIN;
 		}
 		__syncthreads();
@@ -700,14 +700,15 @@ __device__ void evalBlackMoveKernel(result_gpu_t* resultOut, boardstate_t* board
 	__syncthreads();
 	if(IS_ROOT_THREAD)
 	{
+		if(depth == 0) printf("Result: %i\n", results[resultIndex]);
 		*resultOut = results[resultIndex];
 		cudaFree(results);
 	}
 }
 
-__device__ void evalRedMoveKernel(result_gpu_t* resultOut, boardstate_t* board, Move* oldMoves, depth_t depth)
+__device__ void evalRedMoveKernel(result_gpu_t* resultOut, boardstate_t* board, Move* oldMoves, depth_t depth, boardpos_t (&cornerTile)[SQUARE_COUNT][4])
 {
-	__shared__ boardpos_t cornerTile[SQUARE_COUNT][4];
+	//printf("Depth: %i\n", depth);
 	__shared__ boardstate_t boardTile[SQUARE_COUNT];
 	__shared__ Move moveTile;
 	__shared__ unsigned int moveCount;
@@ -718,12 +719,6 @@ __device__ void evalRedMoveKernel(result_gpu_t* resultOut, boardstate_t* board, 
 	// Copy board
 	boardTile[x] = board[x];
 	__syncthreads();
-
-	// Copy cornerTile for faster calculations
-	cornerTile[x][0] = cornerListDev[x][0];
-	cornerTile[x][1] = cornerListDev[x][1];
-	cornerTile[x][2] = cornerListDev[x][2];
-	cornerTile[x][3] = cornerListDev[x][3];
 
 	// Execute Move (if root)
 	if(IS_ROOT_THREAD)
@@ -748,20 +743,24 @@ __device__ void evalRedMoveKernel(result_gpu_t* resultOut, boardstate_t* board, 
 
 	// Check results and depth
 	if(evalBoardSquareGPU(resultOut, boardTile, cornerTile)) return;
-	if(depth == NODE_DEPTH_GPU) return;
+	if(depth == NODE_DEPTH_GPU)
+	{
+		printf("AHHHH\n");
+		return;
+	}
 
 	__shared__ Move* moves;
 	__shared__ result_gpu_t* results;
-	__shared__ boardstate_t* newBoard;
+	//__shared__ boardstate_t* newBoard;
 	__syncthreads();
 	if(IS_ROOT_THREAD)
 	{
 		gpuErrchk(cudaMalloc(&moves, MOVE_BUFFER_SIZE*sizeof(Move)));
-		gpuErrchk(cudaMalloc(&newBoard, SQUARE_COUNT*sizeof(boardstate_t)));
+		//gpuErrchk(cudaMalloc(&newBoard, SQUARE_COUNT*sizeof(boardstate_t)));
 	}
-	__syncthreads();
-	newBoard[x] = boardTile[x];
-	__syncthreads();
+	//__syncthreads();
+	//newBoard[x] = boardTile[x];
+	//__syncthreads();
 	if(moveTile.moveType == MOVE_JUMP_MULTI)
 	{
 		// Create moves
@@ -775,14 +774,14 @@ __device__ void evalRedMoveKernel(result_gpu_t* resultOut, boardstate_t* board, 
 		__syncthreads();
 		for(uint8_t i = 0; i < moveCount; i++)
 		{
-			evalRedMoveKernel(&results[i], newBoard, &moves[i], depth + 1);
+			evalRedMoveKernel(&results[i], boardTile, &moves[i], depth + 1, cornerTile);
 		}
 
 		__syncthreads();
 		if(IS_ROOT_THREAD)
 		{
 			cudaFree(moves);
-			cudaFree(newBoard);
+			//cudaFree(newBoard);
 			resultVal = RESULT_BLACK_WIN;
 		}
 		__syncthreads();
@@ -811,14 +810,14 @@ __device__ void evalRedMoveKernel(result_gpu_t* resultOut, boardstate_t* board, 
 		__syncthreads();
 		for(uint8_t i = 0; i < moveCount; i++)
 		{
-			evalBlackMoveKernel(&results[i], newBoard, &moves[i], depth + 1);
+			evalBlackMoveKernel(&results[i], boardTile, &moves[i], depth + 1, cornerTile);
 		}
 
 		__syncthreads();
 		if(IS_ROOT_THREAD)
 		{
 			cudaFree(moves);
-			cudaFree(newBoard);
+			//cudaFree(newBoard);
 			resultVal = RESULT_RED_WIN;
 		}
 		__syncthreads();
@@ -841,11 +840,20 @@ __device__ void evalRedMoveKernel(result_gpu_t* resultOut, boardstate_t* board, 
 		cudaFree(results);
 	}
 }
-
 __global__ void getResultsKernel(result_gpu_t* results_dev, boardstate_t* board_dev, Move* moves_dev)
 {
+
+	// Copy cornerTile for faster calculations
+	__shared__ boardpos_t cornerTile[SQUARE_COUNT][4];
+	unsigned int threadX = threadIdx.x;
+	cornerTile[threadX][0] = cornerListDev[threadX][0];
+	cornerTile[threadX][1] = cornerListDev[threadX][1];
+	cornerTile[threadX][2] = cornerListDev[threadX][2];
+	cornerTile[threadX][3] = cornerListDev[threadX][3];
+	__syncthreads();
+
 	unsigned int blockX = blockIdx.x;
-	evalBlackMoveKernel(&results_dev[blockX], board_dev, &moves_dev[blockX], 0);
+	evalBlackMoveKernel(&results_dev[blockX], board_dev, &moves_dev[blockX], 0, cornerTile);
 }
 
 Move* GPUUtility::moves_dev = nullptr;
@@ -855,9 +863,6 @@ boardpos_t previousMultiJumpPos = -1;
 
 void GPUUtility::initializeGPU()
 {
-	// Set limits
-	cudaDeviceSetLimit(cudaLimitDevRuntimeSyncDepth, NODE_DEPTH_GPU + 1);
-
 	// Allocate memory
 	cudaMalloc(&moves_dev, sizeof(Move)*SQUARE_COUNT*4);
 	cudaMalloc(&board_dev, sizeof(BoardState));
@@ -897,11 +902,20 @@ Move GPUUtility::getMove(GameBoard board)
 
 	cudaMemcpy(board_dev, board.getBoardState(), sizeof(BoardState), cudaMemcpyHostToDevice);
 	cudaMemcpy(moves_dev, moves->data(), sizeof(Move)*moves->size(), cudaMemcpyHostToDevice);
-	getResultsKernel CUDA_KERNEL(moves->size(),32) (results_dev, board_dev, moves_dev);
+	getResultsKernel CUDA_KERNEL(static_cast<unsigned int>(moves->size()),32) (results_dev, board_dev, moves_dev);
 
 	// Wait till finished;
-	cudaDeviceSynchronize();
+	gpuErrchk(cudaPeekAtLastError());
+	gpuErrchk(cudaDeviceSynchronize());
 	cudaMemcpy(results_host.data(), results_dev, sizeof(result_gpu_t)*moves->size(), cudaMemcpyDeviceToHost);
+
+	// Print moves & results
+	for(uint8_t i = 0; i < moves->size(); i++)
+	{
+		Move m = moves->at(i);
+		std::cout << "Move: " << +m.oldPos << "," << +m.jumpPos << "," << +m.newPos << "," << +m.moveType << " with result: " << +results_host.at(i) << '\n';
+	}
+	std::cout << std::endl;
 
 	// Pick result
 	auto iterator = std::max_element(std::begin(results_host), std::end(results_host));
