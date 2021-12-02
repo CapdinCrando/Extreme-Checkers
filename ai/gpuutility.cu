@@ -17,7 +17,7 @@ __device__ void atomicMin(T1 x, T2 y);
 template<class T, class T2>
 __device__ T atomicAdd(T* x, T2 y);
 template<class T, class T2>
-__device__ T atomicCAS(T* x, T2 y, T2 z);
+__device__ T atomicExch(T* x, T2 y);
 #else
 #define CUDA_KERNEL(...) <<<__VA_ARGS__>>>
 #endif
@@ -573,7 +573,6 @@ __global__ void evalBlackMoveKernel(result_gpu_t* result, boardstate_t* board, M
 	__shared__ Move moveTile;
 	__shared__ unsigned int moveCount;
 	__shared__ int resultVal;
-	__shared__ int resultIndex;
 	result_gpu_t* resultOut = &result[blockIdx.x];
 	unsigned int x = threadIdx.x;
 
@@ -603,7 +602,6 @@ __global__ void evalBlackMoveKernel(result_gpu_t* result, boardstate_t* board, M
 			}
 		}
 		moveCount = 0;
-		resultIndex = -1;
 	}
 	__syncthreads();
 
@@ -644,15 +642,7 @@ __global__ void evalBlackMoveKernel(result_gpu_t* result, boardstate_t* board, M
 		__syncthreads();
 
 		// Pick max result
-		if(threadIdx.x < moveCount)
-		{
-			atomicMax(&resultVal, results[threadIdx.x]);
-			__syncthreads();
-			if(resultVal == results[threadIdx.x])
-			{
-				resultIndex = x;
-			}
-		}
+		if(threadIdx.x < moveCount) atomicMax(&resultVal, results[threadIdx.x]);
 	}
 	else
 	{
@@ -674,20 +664,12 @@ __global__ void evalBlackMoveKernel(result_gpu_t* result, boardstate_t* board, M
 		__syncthreads();
 
 		// Pick min result
-		if(threadIdx.x < moveCount)
-		{
-			atomicMin(&resultVal, results[threadIdx.x]);
-			__syncthreads();
-			if(resultVal == results[threadIdx.x])
-			{
-				resultIndex = x;
-			}
-		}
+		if(threadIdx.x < moveCount) atomicMin(&resultVal, results[threadIdx.x]);
 	}
 	__syncthreads();
 	if(IS_ROOT_THREAD)
 	{
-		*resultOut = results[resultIndex];
+		*resultOut = resultVal;
 		cudaFree(results);
 	}
 }
@@ -699,7 +681,6 @@ __global__ void evalRedMoveKernel(result_gpu_t* result, boardstate_t* board, Mov
 	__shared__ Move moveTile;
 	__shared__ unsigned int moveCount;
 	__shared__ int resultVal;
-	__shared__ int resultIndex;
 	result_gpu_t* resultOut = &result[blockIdx.x];
 	unsigned int x = threadIdx.x;
 
@@ -730,7 +711,6 @@ __global__ void evalRedMoveKernel(result_gpu_t* result, boardstate_t* board, Mov
 			}
 		}
 		moveCount = 0;
-		resultIndex = -1;
 	}
 	__syncthreads();
 
@@ -770,15 +750,7 @@ __global__ void evalRedMoveKernel(result_gpu_t* result, boardstate_t* board, Mov
 		__syncthreads();
 
 		// Pick max result
-		if(threadIdx.x < moveCount)
-		{
-			atomicMin(&resultVal, results[threadIdx.x]);
-			__syncthreads();
-			if(resultVal == results[threadIdx.x])
-			{
-				resultIndex = x;
-			}
-		}
+		if(threadIdx.x < moveCount) atomicMin(&resultVal, results[threadIdx.x]);
 	}
 	else
 	{
@@ -800,20 +772,12 @@ __global__ void evalRedMoveKernel(result_gpu_t* result, boardstate_t* board, Mov
 		__syncthreads();
 
 		// Pick min result
-		if(threadIdx.x < moveCount)
-		{
-			atomicMax(&resultVal, results[threadIdx.x]);
-			__syncthreads();
-			if(resultVal == results[threadIdx.x])
-			{
-				resultIndex = x;
-			}
-		}
+		if(threadIdx.x < moveCount) atomicMax(&resultVal, results[threadIdx.x]);
 	}
 	__syncthreads();
 	if(IS_ROOT_THREAD)
 	{
-		*resultOut = results[resultIndex];
+		*resultOut = resultVal;
 		cudaFree(results);
 	}
 }
@@ -823,7 +787,7 @@ __global__ void getMoveKernel(Move* move, boardstate_t* board)
 	__shared__ Move moveTile;
 	__shared__ boardpos_t cornerTile[SQUARE_COUNT][4];
 	__shared__ int maxResult;
-	__shared__ uint16_t maxIndex;
+	__shared__ unsigned int maxIndex;
 	__shared__ unsigned int moveCount;
 	__shared__ Move* moves;
 	if(IS_ROOT_THREAD)
@@ -878,11 +842,7 @@ __global__ void getMoveKernel(Move* move, boardstate_t* board)
 	{
 		atomicMax(&maxResult, results[x]);
 		__syncthreads();
-		if(maxResult == results[x])
-		{
-			maxIndex = x;
-		}
-		__syncthreads();
+		if(maxResult == results[x])	atomicExch(&maxIndex, x);
 	}
 	__syncthreads();
 	if(IS_ROOT_THREAD)
