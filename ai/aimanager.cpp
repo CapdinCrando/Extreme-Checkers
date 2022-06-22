@@ -2,12 +2,10 @@
 #include "airandom.h"
 #include "aiminimax.h"
 #include "aiparallel.h"
-#include "aigpu.h"
 
 const std::vector<AI*> AIManager::aiList = { new AIRandom(),
 											 new AIMinimax(),
-											 new AIParallel(),
-											 new AIGPU() };
+											 new AIParallel() };
 
 AIManager::~AIManager()
 {
