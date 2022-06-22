@@ -20,8 +20,8 @@ void GameLogger::openLogFile(GameSettings settings)
 		std::tm localTime;
 		localtime_s(&localTime, &rawTime);
 
-		char logName[] = "log_YYYY-MM-DDT-HH-MM-SSZ.csv";
-		std::strftime(&logName[4], sizeof(logName), "%FT%H-%M-%SZ.csv", &localTime);
+		char logName[] = "log_YYYY-MM-DDT-HH-MM-SS.csv";
+		std::strftime(&logName[4], sizeof(logName), "%Y-%m-%dT%H-%M-%S.csv", &localTime);
 
 		file.open(logName, std::ios::out);
 
