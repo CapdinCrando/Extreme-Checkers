@@ -478,6 +478,22 @@ bool AIUtility::evalBoardResult(GameBoard &board, result_t& resultOut)
 	return false;
 }
 
+size_t AIUtility::selectResult(std::vector<result_t>* results)
+{
+	// Get max element
+	result_t max_element = *std::max_element(results->begin(), results->end());
+
+	// Get all max element indices
+	std::vector<size_t> indices;
+	for(size_t i = 0; i < results->size(); i++)
+	{
+		if(results->at(i) == max_element) indices.push_back(i);
+	}
+
+	// Pick random move and return index
+	return indices.at((rand() % indices.size()));
+}
+
 result_t AIUtility::evalBlackMove(GameBoard board, Move& move, depth_t depth)
 {
 	// Execute Move
