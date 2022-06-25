@@ -9,13 +9,12 @@ std::vector<Move>* AIUtility::getAllBlackMoves(GameBoard &board)
 	std::vector<Move> *jumps = new std::vector<Move>;
 	for(uint8_t i = 0; i < SQUARE_COUNT; i++)
 	{
-		SquareState state = board.getSquareState(i);
-		if(SQUARE_ISNOTEMPTY(state))
+		if(board.isOccupied(i))
 		{
-			if(SQUARE_ISBLACK(state))
+			if(board.isBlack(i))
 			{
 				uint8_t cornerMin = 2;
-				if(SQUARE_ISKING(state)) cornerMin = 0;
+				if(board.isKing(i)) cornerMin = 0;
 				for(uint8_t j = cornerMin; j < 4; j++)
 				{
 					// Get move
@@ -24,8 +23,7 @@ std::vector<Move>* AIUtility::getAllBlackMoves(GameBoard &board)
 					if(move != BOARD_POS_INVALID)
 					{
 						// Check if space is empty
-						SquareState moveState = board.getSquareState(move);
-						if(SQUARE_ISEMPTY(moveState))
+						if(board.isEmpty(move))
 						{
 							// Add move to potential moves
 							m.oldPos = i;
@@ -33,7 +31,7 @@ std::vector<Move>* AIUtility::getAllBlackMoves(GameBoard &board)
 							m.moveType = MOVE_MOVE;
 							moves->push_back(m);
 						}
-						else if(!(SQUARE_ISBLACK(moveState)))
+						else if(board.isRed(move))
 						{
 							// Get jump
 							boardpos_t jump = cornerList[move][j];
@@ -41,7 +39,7 @@ std::vector<Move>* AIUtility::getAllBlackMoves(GameBoard &board)
 							if(jump != BOARD_POS_INVALID)
 							{
 								// Check if space is empty
-								if(SQUARE_ISEMPTY(board.getSquareState(jump)))
+								if(board.isEmpty(jump))
 								{
 									// Add move to potential moves
 									m.oldPos = i;
@@ -57,16 +55,14 @@ std::vector<Move>* AIUtility::getAllBlackMoves(GameBoard &board)
 										{
 											if(moveMulti != move)
 											{
-												SquareState moveStateMulti = board.getSquareState(moveMulti);
-												if(SQUARE_ISNOTEMPTY(moveStateMulti))
+												if(board.isOccupied(moveMulti))
 												{
-													if(!(SQUARE_ISBLACK(moveStateMulti)))
+													if(board.isRed(moveMulti))
 													{
 														boardpos_t jumpMulti = cornerList[moveMulti][k];
 														if(jumpMulti != BOARD_POS_INVALID)
 														{
-															SquareState jumpStateMulti = board.getSquareState(jumpMulti);
-															if(SQUARE_ISEMPTY(jumpStateMulti))
+															if(board.isEmpty(jumpMulti))
 															{
 																m.moveType = MOVE_JUMP_MULTI;
 																break;
@@ -99,8 +95,7 @@ std::vector<Move>* AIUtility::getAllBlackJumps(GameBoard &board, boardpos_t pos)
 {
 	Move m;
 	std::vector<Move> *jumps = new std::vector<Move>;
-	SquareState state = board.getSquareState(pos);
-	if(SQUARE_ISNOTEMPTY(state))
+	if(board.isOccupied(pos))
 	{
 		for(uint8_t j = 0; j < 4; j++)
 		{
@@ -110,10 +105,9 @@ std::vector<Move>* AIUtility::getAllBlackJumps(GameBoard &board, boardpos_t pos)
 			if(move != BOARD_POS_INVALID)
 			{
 				// Check if space is empty
-				SquareState moveState = board.getSquareState(move);
-				if(SQUARE_ISNOTEMPTY(moveState))
+				if(board.isOccupied(move))
 				{
-					if(!(SQUARE_ISBLACK(moveState)))
+					if(board.isRed(move))
 					{
 						// Get jump
 						boardpos_t jump = cornerList[move][j];
@@ -121,7 +115,7 @@ std::vector<Move>* AIUtility::getAllBlackJumps(GameBoard &board, boardpos_t pos)
 						if(jump != BOARD_POS_INVALID)
 						{
 							// Check if space is empty
-							if(SQUARE_ISEMPTY(board.getSquareState(jump)))
+							if(board.isEmpty(jump))
 							{
 								// Add move to potential moves
 								m.oldPos = pos;
@@ -138,16 +132,14 @@ std::vector<Move>* AIUtility::getAllBlackJumps(GameBoard &board, boardpos_t pos)
 									{
 										if(moveMulti != move)
 										{
-											SquareState moveStateMulti = board.getSquareState(moveMulti);
-											if(SQUARE_ISNOTEMPTY(moveStateMulti))
+											if(board.isOccupied(moveMulti))
 											{
-												if(!(SQUARE_ISBLACK(moveStateMulti)))
+												if(board.isRed(moveMulti))
 												{
 													boardpos_t jumpMulti = cornerList[moveMulti][k];
 													if(jumpMulti != BOARD_POS_INVALID)
 													{
-														SquareState jumpStateMulti = board.getSquareState(jumpMulti);
-														if(SQUARE_ISEMPTY(jumpStateMulti))
+														if(board.isEmpty(jumpMulti))
 														{
 															m.moveType = MOVE_JUMP_MULTI;
 															break;
@@ -176,13 +168,12 @@ std::vector<Move>* AIUtility::getAllRedMoves(GameBoard &board)
 	std::vector<Move> *jumps = new std::vector<Move>;
 	for(uint8_t i = 0; i < SQUARE_COUNT; i++)
 	{
-		SquareState state = board.getSquareState(i);
-		if(SQUARE_ISNOTEMPTY(state))
+		if(board.isOccupied(i))
 		{
-			if(!(SQUARE_ISBLACK(state)))
+			if(board.isRed(i))
 			{
 				uint8_t cornerMax = 2;
-				if(SQUARE_ISKING(state)) cornerMax = 4;
+				if(board.isKing(i)) cornerMax = 4;
 				for(uint8_t j = 0; j < cornerMax; j++)
 				{
 					// Get move
@@ -191,8 +182,7 @@ std::vector<Move>* AIUtility::getAllRedMoves(GameBoard &board)
 					if(move != BOARD_POS_INVALID)
 					{
 						// Check if space is empty
-						SquareState moveState = board.getSquareState(move);
-						if(SQUARE_ISEMPTY(moveState))
+						if(board.isEmpty(move))
 						{
 							// Add move to potential moves
 							m.oldPos = i;
@@ -200,7 +190,7 @@ std::vector<Move>* AIUtility::getAllRedMoves(GameBoard &board)
 							m.moveType = MOVE_MOVE;
 							moves->push_back(m);
 						}
-						else if(SQUARE_ISBLACK(moveState))
+						else if(board.isBlack(move))
 						{
 							// Get jump
 							boardpos_t jump = cornerList[move][j];
@@ -208,7 +198,7 @@ std::vector<Move>* AIUtility::getAllRedMoves(GameBoard &board)
 							if(jump != BOARD_POS_INVALID)
 							{
 								// Check if space is empty
-								if(SQUARE_ISEMPTY(board.getSquareState(jump)))
+								if(board.isEmpty(jump))
 								{
 									// Add move to potential moves
 									m.oldPos = i;
@@ -224,16 +214,14 @@ std::vector<Move>* AIUtility::getAllRedMoves(GameBoard &board)
 										{
 											if(moveMulti != move)
 											{
-												SquareState moveStateMulti = board.getSquareState(moveMulti);
-												if(SQUARE_ISNOTEMPTY(moveStateMulti))
+												if(board.isOccupied(moveMulti))
 												{
-													if(SQUARE_ISBLACK(moveStateMulti))
+													if(board.isBlack(moveMulti))
 													{
 														boardpos_t jumpMulti = cornerList[moveMulti][k];
 														if(jumpMulti != BOARD_POS_INVALID)
 														{
-															SquareState jumpStateMulti = board.getSquareState(jumpMulti);
-															if(SQUARE_ISEMPTY(jumpStateMulti))
+															if(board.isEmpty(jumpMulti))
 															{
 																m.moveType = MOVE_JUMP_MULTI;
 																break;
@@ -266,8 +254,7 @@ std::vector<Move>* AIUtility::getAllRedJumps(GameBoard &board, boardpos_t pos)
 {
 	Move m;
 	std::vector<Move> *jumps = new std::vector<Move>;
-	SquareState state = board.getSquareState(pos);
-	if(SQUARE_ISNOTEMPTY(state))
+	if(board.isOccupied(pos))
 	{
 		for(uint8_t j = 0; j < 4; j++)
 		{
@@ -277,10 +264,9 @@ std::vector<Move>* AIUtility::getAllRedJumps(GameBoard &board, boardpos_t pos)
 			if(move != BOARD_POS_INVALID)
 			{
 				// Check if space is empty
-				SquareState moveState = board.getSquareState(move);
-				if(SQUARE_ISNOTEMPTY(moveState))
+				if(board.isOccupied(move))
 				{
-					if(SQUARE_ISBLACK(moveState))
+					if(board.isBlack(move))
 					{
 						// Get jump
 						boardpos_t jump = cornerList[move][j];
@@ -288,7 +274,7 @@ std::vector<Move>* AIUtility::getAllRedJumps(GameBoard &board, boardpos_t pos)
 						if(jump != BOARD_POS_INVALID)
 						{
 							// Check if space is empty
-							if(SQUARE_ISEMPTY(board.getSquareState(jump)))
+							if(board.isEmpty(jump))
 							{
 								// Add move to potential moves
 								m.oldPos = pos;
@@ -305,16 +291,14 @@ std::vector<Move>* AIUtility::getAllRedJumps(GameBoard &board, boardpos_t pos)
 									{
 										if(moveMulti != move)
 										{
-											SquareState moveStateMulti = board.getSquareState(moveMulti);
-											if(SQUARE_ISNOTEMPTY(moveStateMulti))
+											if(board.isOccupied(moveMulti))
 											{
-												if(SQUARE_ISBLACK(moveStateMulti))
+												if(board.isBlack(moveMulti))
 												{
 													boardpos_t jumpMulti = cornerList[moveMulti][k];
 													if(jumpMulti != BOARD_POS_INVALID)
 													{
-														SquareState jumpStateMulti = board.getSquareState(jumpMulti);
-														if(SQUARE_ISEMPTY(jumpStateMulti))
+														if(board.isEmpty(jumpMulti))
 														{
 															m.moveType = MOVE_JUMP_MULTI;
 															break;
@@ -344,14 +328,13 @@ bool AIUtility::evalBoardResult(GameBoard &board, result_t& resultOut)
 	bool blackMoveFound = false;
 	for(boardpos_t pos = 0; pos < SQUARE_COUNT; pos++)
 	{
-		SquareState state = board.getSquareState(pos);
-		if(SQUARE_ISNOTEMPTY(state))
+		if(board.isOccupied(pos))
 		{
-			if(SQUARE_ISBLACK(state))
+			if(board.isBlack(pos))
 			{
 				blackCount += 1;
 				uint8_t cornerMin = 2;
-				if(SQUARE_ISKING(state)) cornerMin = 0;
+				if(board.isKing(pos)) cornerMin = 0;
 				for(uint8_t i = cornerMin; i < 4; i++)
 				{
 					// Get move
@@ -361,12 +344,11 @@ bool AIUtility::evalBoardResult(GameBoard &board, result_t& resultOut)
 					if(move != BOARD_POS_INVALID)
 					{
 						// Check if space is empty
-						SquareState moveState = board.getSquareState(move);
-						if(SQUARE_ISEMPTY(moveState))
+						if(board.isEmpty(move))
 						{
 							blackMoveFound = true;
 						}
-						else if(!(SQUARE_ISBLACK(moveState)))
+						else if(board.isRed(move))
 						{
 							// Get jump
 							boardpos_t jump = cornerList[move][i];
@@ -374,7 +356,7 @@ bool AIUtility::evalBoardResult(GameBoard &board, result_t& resultOut)
 							if(jump != BOARD_POS_INVALID)
 							{
 								// Check if space is empty
-								if(SQUARE_ISEMPTY(board.getSquareState(jump)))
+								if(board.isEmpty(jump))
 								{
 									// Add jump to potential moves
 									blackMoveFound = true;
@@ -388,7 +370,7 @@ bool AIUtility::evalBoardResult(GameBoard &board, result_t& resultOut)
 			{
 				redCount += 1;
 				uint8_t cornerMax = 2;
-				if(SQUARE_ISKING(state)) cornerMax = 4;
+				if(board.isKing(pos)) cornerMax = 4;
 				for(uint8_t i = 0; i < cornerMax; i++)
 				{
 					// Get move
@@ -398,12 +380,11 @@ bool AIUtility::evalBoardResult(GameBoard &board, result_t& resultOut)
 					if(move != BOARD_POS_INVALID)
 					{
 						// Check if space is empty
-						SquareState moveState = board.getSquareState(move);
-						if(SQUARE_ISEMPTY(moveState))
+						if(board.isEmpty(move))
 						{
 							redMoveFound = true;
 						}
-						else if(SQUARE_ISBLACK(moveState))
+						else if(board.isBlack(move))
 						{
 							// Get jump
 							boardpos_t jump = cornerList[move][i];
@@ -411,7 +392,7 @@ bool AIUtility::evalBoardResult(GameBoard &board, result_t& resultOut)
 							if(jump != BOARD_POS_INVALID)
 							{
 								// Check if space is empty
-								if(SQUARE_ISEMPTY(board.getSquareState(jump)))
+								if(board.isEmpty(jump))
 								{
 									// Add jump to potential moves
 									redMoveFound = true;
@@ -498,7 +479,7 @@ result_t AIUtility::evalBlackMove(GameBoard board, Move& move, depth_t depth)
 {
 	// Execute Move
 	board.move(move.oldPos, move.newPos);
-	if(MOVE_ISJUMP(move)) board.setSquareState(move.jumpPos, SQUARE_EMPTY);
+	if(MOVE_ISJUMP(move)) board.makeEmpty(move.jumpPos);
 
 	// Check for king
 	if(move.newPos > 27)
@@ -549,7 +530,7 @@ result_t AIUtility::evalRedMove(GameBoard board, Move& move, depth_t depth)
 {
 	// Execute Move
 	board.move(move.oldPos, move.newPos);
-	if(MOVE_ISJUMP(move)) board.setSquareState(move.jumpPos, SQUARE_EMPTY);
+	if(MOVE_ISJUMP(move)) board.makeEmpty(move.jumpPos);
 
 	// Check for king
 	if(move.newPos < 4)
