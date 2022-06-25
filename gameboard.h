@@ -34,7 +34,10 @@ typedef int8_t boardpos_t;
 typedef uint32_t bitboard_t;
 typedef uint32_t bitpos_t;
 
-typedef boardstate_t BoardState[SQUARE_COUNT];
+struct BoardState
+{
+	bitboard_t isOccupiedBoard, isBlackBoard, isKingBoard;
+};
 
 static const SquareState initialGame[SQUARE_COUNT] = {SQUARE_BLACK, SQUARE_BLACK, SQUARE_BLACK, SQUARE_BLACK,
 											SQUARE_BLACK, SQUARE_BLACK, SQUARE_BLACK, SQUARE_BLACK,
@@ -62,7 +65,7 @@ public:
 	GameBoard();
 	~GameBoard();
 
-	//BoardState* getBoardState();
+	BoardState getBoardState();
 	void move(boardpos_t pos1, boardpos_t pos2);
 	void setSquareState(boardpos_t index, SquareState state);
 	SquareState getSquareState(boardpos_t index);
@@ -75,8 +78,7 @@ public:
 	bool kingPiece(boardpos_t pos);
 
 private:
-	//BoardState boardState;
-	bitboard_t isOccupiedBoard, isBlackBoard, isKingBoard;
+	BoardState boardState;
 };
 
 #endif // GAMEBOARD_H
