@@ -1,7 +1,7 @@
 #ifndef TABLE_H
 #define TABLE_H
 
-#define TABLE_SIZE 20000000UL
+#define TABLE_SIZE 40000000UL
 
 #include "defines.h"
 #include "tableentry.h"
