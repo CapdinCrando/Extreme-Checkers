@@ -4,7 +4,7 @@
 #include <cinttypes>
 #include <vector>
 
-#define NODE_DEPTH_MINIMAX 7
+#define NODE_DEPTH_MINIMAX 9
 #define NODE_DEPTH_GPU 6
 
 #define CALCULATE_TIME_US 500000
@@ -24,7 +24,7 @@ struct GameSettings
 	bool enableLogging = 0;
 };
 
-typedef unsigned char depth_t;
+typedef int8_t depth_t;
 
 typedef unsigned char movetype_t;
 enum MoveTypes : movetype_t

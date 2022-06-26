@@ -17,6 +17,12 @@ BoardState GameBoard::getBoardState()
 	return boardState;
 }
 
+
+bitboard_t GameBoard::getOccupiedBitBoard()
+{
+	return boardState.isOccupiedBoard;
+}
+
 void GameBoard::move(boardpos_t pos1, boardpos_t pos2)
 {
 	bitboard_t mask1 = (1 << pos1);
@@ -106,4 +112,11 @@ bool GameBoard::kingPiece(boardpos_t pos)
 {
 	boardState.isKingBoard |= (1 << pos);
 	return boardState.isOccupiedBoard & pos;
+}
+
+bool GameBoard::operator == (const GameBoard& board)
+{
+	return	(this->boardState.isOccupiedBoard == board.boardState.isOccupiedBoard) &&
+			(this->boardState.isBlackBoard == board.boardState.isBlackBoard) &&
+			(this->boardState.isKingBoard == board.boardState.isKingBoard);
 }

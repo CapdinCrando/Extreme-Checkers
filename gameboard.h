@@ -66,6 +66,7 @@ public:
 	~GameBoard();
 
 	BoardState getBoardState();
+	bitboard_t getOccupiedBitBoard();
 	void move(boardpos_t pos1, boardpos_t pos2);
 	void setSquareState(boardpos_t index, SquareState state);
 	SquareState getSquareState(boardpos_t index);
@@ -78,6 +79,7 @@ public:
 	bool isOccupiedBlack(boardpos_t index);
 	bool isKing(boardpos_t index);
 	bool kingPiece(boardpos_t pos);
+	bool operator == (const GameBoard& board);
 
 private:
 	BoardState boardState;

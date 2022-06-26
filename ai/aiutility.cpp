@@ -2,6 +2,9 @@
 #include "defines.h"
 #include <algorithm>
 
+Table AIUtility::redTable = Table();
+Table AIUtility::blackTable = Table();
+
 std::vector<Move>* AIUtility::getAllBlackMoves(GameBoard &board)
 {
 	Move m;
@@ -463,10 +466,18 @@ result_t AIUtility::evalBlackMove(GameBoard board, Move& move, depth_t depth)
 		board.kingPiece(move.newPos);
 	}
 
-	// Check depth and evaluate
+	TableEntry* entry = blackTable.getEntry(board.getOccupiedBitBoard());
 	result_t result;
-	if(evalBoardResult(board, result)) return result;
-	else if(depth == NODE_DEPTH_MINIMAX) return result;
+	if(entry->isMatchResult(board, depth, result)) return result;
+
+	// Check depth and evaluate
+	if(evalBoardResult(board, result) || depth == NODE_DEPTH_MINIMAX)
+	{
+		// Store table result
+		entry->replaceResult(board, depth, result);
+
+		return result;
+	}
 
 	std::vector<Move>* moves;
 	std::vector<result_t> results;
@@ -499,7 +510,13 @@ result_t AIUtility::evalBlackMove(GameBoard board, Move& move, depth_t depth)
 		auto iterator = std::min_element(std::begin(results), std::end(results));
 		a = std::distance(results.begin(), iterator);
 	}
-	return results[a];
+	delete moves;
+	result = results[a];
+
+	// Store table result
+	entry->replaceResult(board, depth, result);
+
+	return result;
 }
 
 result_t AIUtility::evalRedMove(GameBoard board, Move& move, depth_t depth)
@@ -514,10 +531,18 @@ result_t AIUtility::evalRedMove(GameBoard board, Move& move, depth_t depth)
 		board.kingPiece(move.newPos);
 	}
 
-	// Check depth and evaluate
+	TableEntry* entry = redTable.getEntry(board.getOccupiedBitBoard());
+
 	result_t result;
-	if(evalBoardResult(board, result)) return result;
-	else if(depth == NODE_DEPTH_MINIMAX) return result;
+	if(entry->isMatchResult(board, depth, result)) return result;
+
+	// Check depth and evaluate
+	if(evalBoardResult(board, result) || depth == NODE_DEPTH_MINIMAX)
+	{
+		// Store table result
+		entry->replaceResult(board, depth, result);
+		return result;
+	}
 
 	std::vector<Move>* moves;
 	std::vector<result_t> results;
@@ -550,5 +575,11 @@ result_t AIUtility::evalRedMove(GameBoard board, Move& move, depth_t depth)
 		auto iterator = std::max_element(std::begin(results), std::end(results));
 		a = std::distance(results.begin(), iterator);
 	}
-	return results[a];
+	delete moves;
+	result = results[a];
+
+	// Store table result
+	entry->replaceResult(board, depth, result);
+
+	return result;
 }

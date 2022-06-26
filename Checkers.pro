@@ -21,7 +21,9 @@ SOURCES += \
     gameview.cpp \
     main.cpp \
     mainwindow.cpp \
-    settingsdialog.cpp
+    settingsdialog.cpp \
+	transposition/table.cpp \
+	transposition/tableentry.cpp
 
 HEADERS += \
 	ai/ai.h \
@@ -40,7 +42,9 @@ HEADERS += \
 	gamelogger.h \
     gameview.h \
     mainwindow.h \
-    settingsdialog.h
+    settingsdialog.h \
+	transposition/table.h \
+	transposition/tableentry.h
 
 FORMS += \
     mainwindow.ui \
