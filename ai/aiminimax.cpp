@@ -3,6 +3,8 @@
 
 Move AIMinimax::getMove(GameBoard& board)
 {
+	AIUtility::resetTime();
+
 	std::vector<Move>* moves;
 	if(previousMultiJumpPos == BOARD_POS_INVALID)
 	{
@@ -24,7 +26,7 @@ Move AIMinimax::getMove(GameBoard& board)
 
 	for(uint8_t i = 0; i < moves->size(); i++)
 	{
-		results.push_back(AIUtility::evalBlackMove(board, moves->at(i), 0));
+		results.push_back(AIUtility::evalBlackMove(board, moves->at(i), 0, false));
 	}
 
 	// Pick result

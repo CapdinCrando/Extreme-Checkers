@@ -4,10 +4,11 @@
 #include <cinttypes>
 #include <vector>
 
-#define NODE_DEPTH_MINIMAX 8
+#define NODE_DEPTH_MINIMAX 3
 #define NODE_DEPTH_GPU 6
 
 #define CALCULATE_TIME_US 500000
+#define AI_TIME_US 40000
 
 enum GameState : int8_t
 {

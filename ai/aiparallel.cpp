@@ -6,6 +6,8 @@
 
 Move AIParallel::getMove(GameBoard& board)
 {
+	AIUtility::resetTime();
+
 	// Generate initial moves
 	std::vector<Move>* moves;
 	if(previousMultiJumpPos == BOARD_POS_INVALID)

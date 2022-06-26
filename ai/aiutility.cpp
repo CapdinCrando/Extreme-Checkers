@@ -1,9 +1,17 @@
 #include "aiutility.h"
 #include "defines.h"
 #include <algorithm>
+#include <chrono>
 
 Table AIUtility::redTable = Table();
 Table AIUtility::blackTable = Table();
+
+std::chrono::system_clock::time_point AIUtility::startTime;
+
+void AIUtility::resetTime()
+{
+	startTime = std::chrono::high_resolution_clock::now();
+}
 
 std::vector<Move>* AIUtility::getAllBlackMoves(GameBoard &board)
 {
@@ -454,7 +462,7 @@ size_t AIUtility::selectResult(std::vector<result_t>* results)
 	return indices.at((rand() % indices.size()));
 }
 
-result_t AIUtility::evalBlackMove(GameBoard board, Move& move, depth_t depth)
+result_t AIUtility::evalBlackMove(GameBoard board, Move& move, depth_t depth, bool finalNode)
 {
 	// Execute Move
 	board.move(move.oldPos, move.newPos);
@@ -471,13 +479,16 @@ result_t AIUtility::evalBlackMove(GameBoard board, Move& move, depth_t depth)
 	if(entry->isMatchResult(board, depth, result)) return result;
 
 	// Check depth and evaluate
-	if(evalBoardResult(board, result) || depth == NODE_DEPTH_MINIMAX)
+	if(evalBoardResult(board, result) || finalNode)
 	{
 		// Store table result
 		entry->replaceResult(board, depth, result);
 
 		return result;
 	}
+
+	auto currentTime = std::chrono::high_resolution_clock::now();
+	finalNode = (AI_TIME_US - std::chrono::duration_cast<std::chrono::microseconds>(currentTime - startTime).count()) <= 0;
 
 	std::vector<Move>* moves;
 	std::vector<result_t> results;
@@ -490,7 +501,7 @@ result_t AIUtility::evalBlackMove(GameBoard board, Move& move, depth_t depth)
 		// Evaluate Moves (recursive)
 		for(uint8_t i = 0; i < moves->size(); i++)
 		{
-			results.push_back(evalBlackMove(board, moves->at(i), depth + 1));
+			results.push_back(evalBlackMove(board, moves->at(i), depth + 1, finalNode));
 		}
 		// Pick max result
 		auto iterator = std::max_element(std::begin(results), std::end(results));
@@ -504,7 +515,7 @@ result_t AIUtility::evalBlackMove(GameBoard board, Move& move, depth_t depth)
 		// Evaluate Moves (recursive)
 		for(uint8_t i = 0; i < moves->size(); i++)
 		{
-			results.push_back(evalRedMove(board, moves->at(i), depth + 1));
+			results.push_back(evalRedMove(board, moves->at(i), depth + 1, finalNode));
 		}
 		// Pick min result
 		auto iterator = std::min_element(std::begin(results), std::end(results));
@@ -519,7 +530,7 @@ result_t AIUtility::evalBlackMove(GameBoard board, Move& move, depth_t depth)
 	return result;
 }
 
-result_t AIUtility::evalRedMove(GameBoard board, Move& move, depth_t depth)
+result_t AIUtility::evalRedMove(GameBoard board, Move& move, depth_t depth, bool finalNode)
 {
 	// Execute Move
 	board.move(move.oldPos, move.newPos);
@@ -537,12 +548,15 @@ result_t AIUtility::evalRedMove(GameBoard board, Move& move, depth_t depth)
 	if(entry->isMatchResult(board, depth, result)) return result;
 
 	// Check depth and evaluate
-	if(evalBoardResult(board, result) || depth == NODE_DEPTH_MINIMAX)
+	if(evalBoardResult(board, result) || finalNode)
 	{
 		// Store table result
 		entry->replaceResult(board, depth, result);
 		return result;
 	}
+
+	auto currentTime = std::chrono::high_resolution_clock::now();
+	finalNode = (AI_TIME_US - std::chrono::duration_cast<std::chrono::microseconds>(currentTime - startTime).count()) <= 0;
 
 	std::vector<Move>* moves;
 	std::vector<result_t> results;
@@ -555,7 +569,7 @@ result_t AIUtility::evalRedMove(GameBoard board, Move& move, depth_t depth)
 		// Evaluate Moves (recursive)
 		for(uint8_t i = 0; i < moves->size(); i++)
 		{
-			results.push_back(evalRedMove(board, moves->at(i), depth + 1));
+			results.push_back(evalRedMove(board, moves->at(i), depth + 1, finalNode));
 		}
 		// Pick min result
 		auto iterator = std::min_element(std::begin(results), std::end(results));
@@ -569,7 +583,7 @@ result_t AIUtility::evalRedMove(GameBoard board, Move& move, depth_t depth)
 		// Evaluate Moves (recursive)
 		for(uint8_t i = 0; i < moves->size(); i++)
 		{
-			results.push_back(evalBlackMove(board, moves->at(i), depth + 1));
+			results.push_back(evalBlackMove(board, moves->at(i), depth + 1, finalNode));
 		}
 		// Pick max result
 		auto iterator = std::max_element(std::begin(results), std::end(results));
