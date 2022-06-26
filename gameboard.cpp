@@ -72,6 +72,16 @@ bool GameBoard::isBlack(boardpos_t index)
 	return boardState.isBlackBoard & (1 << index);
 }
 
+bool GameBoard::isOccupiedRed(boardpos_t index)
+{
+	return (boardState.isOccupiedBoard & ~boardState.isBlackBoard) & (1 << index);
+}
+
+bool GameBoard::isOccupiedBlack(boardpos_t index)
+{
+	return (boardState.isOccupiedBoard & boardState.isBlackBoard) & (1 << index);
+}
+
 bool GameBoard::isKing(boardpos_t index)
 {
 	return boardState.isKingBoard & (1 << index);

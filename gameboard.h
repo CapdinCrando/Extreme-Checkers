@@ -74,6 +74,8 @@ public:
 	bool isEmpty(boardpos_t index);
 	bool isRed(boardpos_t index);
 	bool isBlack(boardpos_t index);
+	bool isOccupiedRed(boardpos_t index);
+	bool isOccupiedBlack(boardpos_t index);
 	bool isKing(boardpos_t index);
 	bool kingPiece(boardpos_t pos);
 

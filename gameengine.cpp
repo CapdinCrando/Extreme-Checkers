@@ -81,22 +81,19 @@ void GameEngine::executeRedMove(Move move)
 			// Check if position is invalid
 			if(cornerPiece != BOARD_POS_INVALID)
 			{
-				if(gameBoard.isOccupied(cornerPiece))
+				if(gameBoard.isOccupiedBlack(cornerPiece))
 				{
-					if(gameBoard.isBlack(cornerPiece))
+					boardpos_t jump = cornerList[cornerPiece][i];
+					if(jump != BOARD_POS_INVALID)
 					{
-						boardpos_t jump = cornerList[cornerPiece][i];
-						if(jump != BOARD_POS_INVALID)
+						if(gameBoard.isEmpty(jump))
 						{
-							if(gameBoard.isEmpty(jump))
-							{
-								Move newJump;
-								newJump.oldPos = move.newPos;
-								newJump.newPos = jump;
-								newJump.jumpPos = cornerPiece;
-								newJump.moveType = MOVE_JUMP;
-								newJumps.push_back(newJump);
-							}
+							Move newJump;
+							newJump.oldPos = move.newPos;
+							newJump.newPos = jump;
+							newJump.jumpPos = cornerPiece;
+							newJump.moveType = MOVE_JUMP;
+							newJumps.push_back(newJump);
 						}
 					}
 				}
@@ -353,52 +350,47 @@ std::vector<Move> GameEngine::getRedMoves(boardpos_t pos)
 				// Check if space is empty
 				if(jumpExists)
 				{
-					if(gameBoard.isOccupied(move))
+					if(gameBoard.isOccupiedBlack(move))
 					{
-						if(gameBoard.isBlack(move))
+						// Get jump
+						boardpos_t jump = cornerList[move][j];
+						// Check if position is invalid
+						if(jump != BOARD_POS_INVALID)
 						{
-							// Get jump
-							boardpos_t jump = cornerList[move][j];
-							// Check if position is invalid
-							if(jump != BOARD_POS_INVALID)
+							// Check if space is empty
+							if(gameBoard.isEmpty(jump))
 							{
-								// Check if space is empty
-								if(gameBoard.isEmpty(jump))
+								// Add move to potential moves
+								m.oldPos = pos;
+								m.newPos = jump;
+								m.jumpPos = move;
+								// Check for multi
+								m.moveType = MOVE_JUMP;
+								for(uint8_t k = 0; k < 4; k++)
 								{
-									// Add move to potential moves
-									m.oldPos = pos;
-									m.newPos = jump;
-									m.jumpPos = move;
-									// Check for multi
-									m.moveType = MOVE_JUMP;
-									for(uint8_t k = 0; k < 4; k++)
+									boardpos_t moveMulti = cornerList[jump][k];
+									// Check if position is invalid
+									if(moveMulti != BOARD_POS_INVALID)
 									{
-										boardpos_t moveMulti = cornerList[jump][k];
-										// Check if position is invalid
-										if(moveMulti != BOARD_POS_INVALID)
+										if(moveMulti != move)
 										{
-											if(moveMulti != move)
+											if(gameBoard.isOccupiedBlack(moveMulti))
 											{
-												if(gameBoard.isOccupied(moveMulti))
+												boardpos_t jumpMulti = cornerList[moveMulti][k];
+												if(jumpMulti != BOARD_POS_INVALID)
 												{
-													if(gameBoard.isBlack(moveMulti))
+													if(gameBoard.isEmpty(jumpMulti))
 													{
-														boardpos_t jumpMulti = cornerList[moveMulti][k];
-														if(jumpMulti != BOARD_POS_INVALID)
-														{
-															if(gameBoard.isEmpty(jumpMulti))
-															{
-																m.moveType = MOVE_JUMP_MULTI;
-																break;
-															}
-														}
+														m.moveType = MOVE_JUMP_MULTI;
+														break;
 													}
 												}
+
 											}
 										}
 									}
-									jumps.push_back(m);
 								}
+								jumps.push_back(m);
 							}
 						}
 					}
@@ -422,7 +414,7 @@ bool GameEngine::canBlackMove()
 {
 	for(uint8_t pos = 0; pos < SQUARE_COUNT; pos++)
 	{
-		if(gameBoard.isBlack(pos))
+		if(gameBoard.isOccupiedBlack(pos))
 		{
 			uint8_t cornerMin = 2;
 			if(gameBoard.isKing(pos)) cornerMin = 0;
