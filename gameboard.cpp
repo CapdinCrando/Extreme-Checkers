@@ -110,8 +110,9 @@ SquareState GameBoard::getSquareState(boardpos_t index)
 
 bool GameBoard::kingPiece(boardpos_t pos)
 {
-	boardState.isKingBoard |= (1 << pos);
-	return boardState.isOccupiedBoard & pos;
+	bitboard_t mask = (1 << pos);
+	boardState.isKingBoard |= mask;
+	return boardState.isOccupiedBoard & mask;
 }
 
 bool GameBoard::operator == (const GameBoard& board)
