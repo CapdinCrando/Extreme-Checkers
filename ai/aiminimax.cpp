@@ -22,9 +22,16 @@ Move AIMinimax::getMove(GameBoard& board)
 
 	std::vector<result_t> results;
 
+	result_t alpha = RESULT_MIN;
+	result_t beta = RESULT_MAX;
+	result_t result = RESULT_MIN;
 	for(uint8_t i = 0; i < moves->size(); i++)
 	{
-		results.push_back(AIUtility::evalBlackMove(board, moves->at(i), 0));
+		result_t value = AIUtility::evalBlackMove(board, moves->at(i), 0, alpha, beta);
+		results.push_back(value);
+		result	= std::max(result, value);
+		alpha = std::max(alpha, result);
+		if(beta <= alpha) break;
 	}
 
 	// Pick result

@@ -454,7 +454,7 @@ size_t AIUtility::selectResult(std::vector<result_t>* results)
 	return indices.at((rand() % indices.size()));
 }
 
-result_t AIUtility::evalBlackMove(GameBoard board, Move& move, depth_t depth)
+result_t AIUtility::evalBlackMove(GameBoard board, Move& move, depth_t depth, result_t alpha, result_t beta)
 {
 	// Execute Move
 	board.move(move.oldPos, move.newPos);
@@ -480,21 +480,20 @@ result_t AIUtility::evalBlackMove(GameBoard board, Move& move, depth_t depth)
 	}
 
 	std::vector<Move>* moves;
-	std::vector<result_t> results;
-	size_t a;
 	if(move.moveType == MOVE_JUMP_MULTI)
 	{
 		// Create moves
 		moves = getAllBlackJumps(board, move.newPos);
 
 		// Evaluate Moves (recursive)
+		result = RESULT_MIN;
 		for(uint8_t i = 0; i < moves->size(); i++)
 		{
-			results.push_back(evalBlackMove(board, moves->at(i), depth + 1));
+			result_t value = evalBlackMove(board, moves->at(i), depth + 1, alpha, beta);
+			result	= std::max(result, value);
+			alpha = std::max(alpha, result);
+			if(beta <= alpha) break;
 		}
-		// Pick max result
-		auto iterator = std::max_element(std::begin(results), std::end(results));
-		a = std::distance(results.begin(), iterator);
 	}
 	else
 	{
@@ -502,16 +501,16 @@ result_t AIUtility::evalBlackMove(GameBoard board, Move& move, depth_t depth)
 		moves = getAllRedMoves(board);
 
 		// Evaluate Moves (recursive)
+		result = RESULT_MAX;
 		for(uint8_t i = 0; i < moves->size(); i++)
 		{
-			results.push_back(evalRedMove(board, moves->at(i), depth + 1));
+			result_t value = evalRedMove(board, moves->at(i), depth + 1, alpha, beta);
+			result = std::min(result, value);
+			beta = std::min(beta, result);
+			if(beta <= alpha) break;
 		}
-		// Pick min result
-		auto iterator = std::min_element(std::begin(results), std::end(results));
-		a = std::distance(results.begin(), iterator);
 	}
 	delete moves;
-	result = results[a];
 
 	// Store table result
 	entry->replaceResult(board, depth, result);
@@ -519,7 +518,7 @@ result_t AIUtility::evalBlackMove(GameBoard board, Move& move, depth_t depth)
 	return result;
 }
 
-result_t AIUtility::evalRedMove(GameBoard board, Move& move, depth_t depth)
+result_t AIUtility::evalRedMove(GameBoard board, Move& move, depth_t depth, result_t alpha, result_t beta)
 {
 	// Execute Move
 	board.move(move.oldPos, move.newPos);
@@ -545,21 +544,20 @@ result_t AIUtility::evalRedMove(GameBoard board, Move& move, depth_t depth)
 	}
 
 	std::vector<Move>* moves;
-	std::vector<result_t> results;
-	size_t a;
 	if(move.moveType == MOVE_JUMP_MULTI)
 	{
 		// Create moves
 		moves = getAllRedJumps(board, move.newPos);
 
 		// Evaluate Moves (recursive)
+		result = RESULT_MAX;
 		for(uint8_t i = 0; i < moves->size(); i++)
 		{
-			results.push_back(evalRedMove(board, moves->at(i), depth + 1));
+			result_t value = evalRedMove(board, moves->at(i), depth + 1, alpha, beta);
+			result = std::min(result, value);
+			beta = std::min(beta, result);
+			if(beta <= alpha) break;
 		}
-		// Pick min result
-		auto iterator = std::min_element(std::begin(results), std::end(results));
-		a = std::distance(results.begin(), iterator);
 	}
 	else
 	{
@@ -567,16 +565,16 @@ result_t AIUtility::evalRedMove(GameBoard board, Move& move, depth_t depth)
 		moves = getAllBlackMoves(board);
 
 		// Evaluate Moves (recursive)
+		result = RESULT_MIN;
 		for(uint8_t i = 0; i < moves->size(); i++)
 		{
-			results.push_back(evalBlackMove(board, moves->at(i), depth + 1));
+			result_t value = evalBlackMove(board, moves->at(i), depth + 1, alpha, beta);
+			result	= std::max(result, value);
+			alpha = std::max(alpha, result);
+			if(beta <= alpha) break;
 		}
-		// Pick max result
-		auto iterator = std::max_element(std::begin(results), std::end(results));
-		a = std::distance(results.begin(), iterator);
 	}
 	delete moves;
-	result = results[a];
 
 	// Store table result
 	entry->replaceResult(board, depth, result);

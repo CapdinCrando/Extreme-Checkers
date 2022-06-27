@@ -48,7 +48,10 @@ enum ResultType : result_t
 {
 	RESULT_TIE = 0,
 	RESULT_RED_WIN = -24,
-	RESULT_BLACK_WIN = 24
+	RESULT_BLACK_WIN = 24,
+	RESULT_MIN = INT8_MIN,
+	RESULT_MAX = INT8_MAX
+
 };
 
 #endif // DEFINES_H
