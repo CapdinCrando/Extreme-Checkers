@@ -36,9 +36,7 @@ Move AIParallel::getMove(GameBoard& board)
 	QThreadPool::globalInstance()->waitForDone();
 
 	// Pick result
-	auto iterator = std::max_element(std::begin(results), std::end(results));
-	size_t a = std::distance(results.begin(), iterator);
-	Move move = moves->at(a);
+	Move move = moves->at(AIUtility::selectResult(&results));
 
 	// Check for multijump
 	if(move.moveType == MOVE_JUMP_MULTI)

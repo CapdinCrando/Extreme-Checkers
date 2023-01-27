@@ -6,10 +6,14 @@
 #define SQUARE_COUNT 32
 #define BITS_PER_SQUARE 4
 
-#define SQUARE_ISKING(state) state & 0x1
-#define SQUARE_ISBLACK(state) state & 0x2
-#define SQUARE_ISEMPTY(state) (state & 0x4) == 0
-#define SQUARE_ISNOTEMPTY(state) state & 0x4
+#define BIT_ISKING	0x1
+#define BIT_ISBLACK 0x2
+#define BIT_ISEMPTY 0x4
+
+#define SQUARE_ISKING(state) state & BIT_ISKING
+#define SQUARE_ISBLACK(state) state & BIT_ISBLACK
+#define SQUARE_ISEMPTY(state) (state & BIT_ISEMPTY) == 0
+#define SQUARE_ISNOTEMPTY(state) state & BIT_ISEMPTY
 
 #define MOVE_ISJUMP(move) move.moveType >= MOVE_JUMP
 #define MOVE_ISINVALID(move) move.moveType == MOVE_INVALID
@@ -27,7 +31,13 @@ enum SquareState : boardstate_t {
 
 typedef int8_t boardpos_t;
 
-typedef boardstate_t BoardState[SQUARE_COUNT];
+typedef uint32_t bitboard_t;
+typedef uint32_t bitpos_t;
+
+struct BoardState
+{
+	bitboard_t isOccupiedBoard, isBlackBoard, isKingBoard;
+};
 
 static const SquareState initialGame[SQUARE_COUNT] = {SQUARE_BLACK, SQUARE_BLACK, SQUARE_BLACK, SQUARE_BLACK,
 											SQUARE_BLACK, SQUARE_BLACK, SQUARE_BLACK, SQUARE_BLACK,
@@ -55,11 +65,21 @@ public:
 	GameBoard();
 	~GameBoard();
 
-	BoardState* getBoardState();
+	BoardState getBoardState();
+	bitboard_t getOccupiedBitBoard();
 	void move(boardpos_t pos1, boardpos_t pos2);
 	void setSquareState(boardpos_t index, SquareState state);
 	SquareState getSquareState(boardpos_t index);
+	void makeEmpty(boardpos_t index);
+	bool isOccupied(boardpos_t index);
+	bool isEmpty(boardpos_t index);
+	bool isRed(boardpos_t index);
+	bool isBlack(boardpos_t index);
+	bool isOccupiedRed(boardpos_t index);
+	bool isOccupiedBlack(boardpos_t index);
+	bool isKing(boardpos_t index);
 	bool kingPiece(boardpos_t pos);
+	bool operator == (const GameBoard& board);
 
 private:
 	BoardState boardState;

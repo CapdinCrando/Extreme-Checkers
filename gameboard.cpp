@@ -12,33 +12,112 @@ GameBoard::~GameBoard()
 
 }
 
-BoardState* GameBoard::getBoardState()
+BoardState GameBoard::getBoardState()
 {
-	return &boardState;
+	return boardState;
+}
+
+
+bitboard_t GameBoard::getOccupiedBitBoard()
+{
+	return boardState.isOccupiedBoard;
 }
 
 void GameBoard::move(boardpos_t pos1, boardpos_t pos2)
 {
-	boardState[pos2] = boardState[pos1];
-	boardState[pos1] = SQUARE_EMPTY;
+	bitboard_t mask1 = (1 << pos1);
+	bitboard_t mask2 = (1 << pos2);
+
+	boardState.isOccupiedBoard |= mask2;
+	boardState.isOccupiedBoard &= ~mask1;
+
+	if(boardState.isBlackBoard & mask1) boardState.isBlackBoard |= mask2;
+	else boardState.isBlackBoard &= ~mask2;
+
+	if(boardState.isKingBoard & mask1) boardState.isKingBoard |= mask2;
+	else boardState.isKingBoard &= ~mask2;
 }
 
 void GameBoard::setSquareState(boardpos_t index, SquareState state)
 {
-	boardState[index] = state;
+	bitboard_t mask = (1 << index);
+
+	if(SQUARE_ISNOTEMPTY(state)) boardState.isOccupiedBoard |= mask;
+	else boardState.isOccupiedBoard &= ~mask;
+
+	if(SQUARE_ISBLACK(state)) boardState.isBlackBoard |= mask;
+	else boardState.isBlackBoard &= ~mask;
+
+	if(SQUARE_ISKING(state)) boardState.isKingBoard |= mask;
+	else boardState.isKingBoard &= ~mask;
+}
+
+
+void GameBoard::makeEmpty(boardpos_t index)
+{
+	boardState.isOccupiedBoard &= ~(1 << index);
+}
+
+bool GameBoard::isEmpty(boardpos_t index)
+{
+	return (boardState.isOccupiedBoard & (1 << index)) == 0;
+}
+
+bool GameBoard::isOccupied(boardpos_t index)
+{
+	return boardState.isOccupiedBoard & (1 << index);
+}
+
+bool GameBoard::isRed(boardpos_t index)
+{
+	return (boardState.isBlackBoard & (1 << index)) == 0;
+}
+
+bool GameBoard::isBlack(boardpos_t index)
+{
+	return boardState.isBlackBoard & (1 << index);
+}
+
+bool GameBoard::isOccupiedRed(boardpos_t index)
+{
+	return (boardState.isOccupiedBoard & ~boardState.isBlackBoard) & (1 << index);
+}
+
+bool GameBoard::isOccupiedBlack(boardpos_t index)
+{
+	return (boardState.isOccupiedBoard & boardState.isBlackBoard) & (1 << index);
+}
+
+bool GameBoard::isKing(boardpos_t index)
+{
+	return boardState.isKingBoard & (1 << index);
 }
 
 SquareState GameBoard::getSquareState(boardpos_t index)
 {
-	return static_cast<SquareState>(boardState[index]);
+	boardstate_t state = SQUARE_EMPTY;
+
+	bitboard_t mask = (1 << index);
+	if(boardState.isOccupiedBoard & mask)
+	{
+		state |= BIT_ISEMPTY;
+		if(boardState.isBlackBoard & mask) state |= BIT_ISBLACK;
+		if(boardState.isKingBoard & mask) state |= BIT_ISKING;
+	}
+
+	return static_cast<SquareState>(state);
 }
 
 bool GameBoard::kingPiece(boardpos_t pos)
 {
-	if(SQUARE_ISNOTEMPTY(boardState[pos]))
-	{
-		boardState[pos] |= 0x1;
-		return true;
-	}
-	return false;
+	bitboard_t mask = (1 << pos);
+	boardState.isKingBoard |= mask;
+	return boardState.isOccupiedBoard & mask;
+}
+
+bool GameBoard::operator == (const GameBoard& board)
+{
+	return	(this->boardState.isOccupiedBoard == board.boardState.isOccupiedBoard) &&
+			(this->boardState.isBlackBoard == board.boardState.isBlackBoard) &&
+			(this->boardState.isKingBoard == board.boardState.isKingBoard);
 }
